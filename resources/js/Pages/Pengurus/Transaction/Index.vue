@@ -7,12 +7,12 @@ import DashboardLayout from '@/Layouts/DashboardLayout.vue'
 <template>
 
     <Head>
-        <title>Title Goes Here</title>
+        <title>Pendataan Transferan</title>
     </Head>
 
     <DashboardLayout>
         <template #header>
-            <h1 class="text-xl font-semibold tracking-tight">Title Goes Here</h1>
+            <h1 class="text-xl font-semibold tracking-tight">Pendataan Transferan</h1>
         </template>
 
         <section class="bg-white p-3 rounded-lg mb-3 dark:bg-neutral-800">

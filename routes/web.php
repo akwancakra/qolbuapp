@@ -1,7 +1,11 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Duta\BeneficiaryController as DutaBeneficiaryController;
+use App\Http\Controllers\Duta\TransactionController as DutaTransactionController;
+use App\Http\Controllers\Pengurus\BeneficiaryController as PengurusBeneficiaryController;
+use App\Http\Controllers\Pengurus\TransactionController as PengurusTransactionController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -43,7 +47,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('ad')->group(function () {
         return Inertia::render('Admin/Dashboard');
     })->name('admin.dashboard');
 
-    Route::resource('users', UserController::class);
+    Route::resource('users', AdminUserController::class);
 });
 
 Route::middleware(['auth', 'role:pengurus'])->prefix('pe')->group(function () {
@@ -51,6 +55,9 @@ Route::middleware(['auth', 'role:pengurus'])->prefix('pe')->group(function () {
     Route::get('/dashboard', function () {
         return Inertia::render('Pengurus/Dashboard');
     })->name('pengurus.dashboard');
+
+    Route::resource('transactions', PengurusTransactionController::class);
+    Route::resource('beneficiaries', PengurusBeneficiaryController::class);
 });
 
 Route::middleware(['auth', 'role:duta'])->prefix('du')->group(function () {
@@ -58,6 +65,11 @@ Route::middleware(['auth', 'role:duta'])->prefix('du')->group(function () {
     Route::get('/dashboard', function () {
         return Inertia::render('Duta/Dashboard');
     })->name('duta.dashboard');
+
+    Route::resource('transactions', DutaTransactionController::class);
+    Route::resource('beneficiaries', DutaBeneficiaryController::class);
+    // Route::resource('keuangan', UserController::class);
+    // Route::resource('member', UserController::class);
 });
 
 Route::middleware('auth')->group(function () {

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { defineProps, ref, computed } from 'vue';
 import { Link } from '@inertiajs/vue3';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Button } from '@/Components/ui/button';
+import { Input } from '@/Components/ui/input';
+import { Label } from '@/Components/ui/label';
 import {
     Table,
     TableBody,
@@ -12,7 +12,7 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from '@/components/ui/table';
+} from '@/Components/ui/table';
 import {
     Select,
     SelectContent,
@@ -20,7 +20,7 @@ import {
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from '@/components/ui/select';
+} from '@/Components/ui/select';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -28,7 +28,7 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@/Components/ui/dropdown-menu';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -39,10 +39,10 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
     AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+} from '@/Components/ui/alert-dialog';
 import { Ellipsis, ChevronDown, Pencil, Trash2 } from 'lucide-vue-next';
 import { Head } from '@inertiajs/vue3';
-import { BarChart } from '@/components/ui/chart-bar';
+import { BarChart } from '@/Components/ui/chart-bar';
 import { Checkbox } from '@/Components/ui/checkbox';
 // LOCAL COMPONENTS
 import CustomChartTooltip from './_components/CustomChartTooltip.vue';
@@ -82,12 +82,11 @@ const selectedUsers = ref<number[]>([]);
 const selectedCount = computed(() => selectedUsers.value.length);
 
 // Function untuk toggle checkbox
-const toggleCheckbox = (id: number) => {
-    const index = selectedUsers.value.indexOf(id);
-    if (index > -1) {
-        selectedUsers.value.splice(index, 1);
-    } else {
+const toggleCheckbox = (checked: boolean, id: number) => {
+    if (checked) {
         selectedUsers.value.push(id);
+    } else {
+        selectedUsers.value = selectedUsers.value.filter(userId => userId !== id);
     }
 };
 
@@ -111,7 +110,7 @@ const deleteSelectedUsers = () => {
             <h1 class="text-xl font-semibold tracking-tight">Dashboard User</h1>
         </template>
 
-        <section class="bg-white p-3 rounded-lg mb-3">
+        <section class="bg-white p-3 rounded-lg mb-3 dark:bg-neutral-800">
             <div class="flex justify-between items-center mb-3">
                 <div>
                     <p class="font-semibold text-2xl tracking-tight">Transferan Minggu 1 Sept</p>
@@ -122,7 +121,7 @@ const deleteSelectedUsers = () => {
                 <DropdownMenu>
                     <DropdownMenuTrigger as-child>
                         <Button size="icon" variant="outline">
-                            <Ellipsis size="18" />
+                            <Ellipsis :size="18" />
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
@@ -145,7 +144,7 @@ const deleteSelectedUsers = () => {
                     <Label for="type">Tipe Waktu</Label>
                     <Select>
                         <SelectTrigger>
-                            <SelectValue placeholder="Select a fruit" />
+                            <SelectValue placeholder="Pilih Waktu" />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectGroup>
@@ -159,7 +158,7 @@ const deleteSelectedUsers = () => {
             </div>
         </section>
 
-        <section class="bg-white p-3 rounded-lg mb-3">
+        <section class="bg-white p-3 rounded-lg mb-3 dark:bg-neutral-800">
             <div :class="['flex justify-between items-center'], showContentTwo ? 'mb-3' : ''">
                 <div>
                     <p class="font-semibold text-2xl tracking-tight">Overview Minggu 1 Sept</p>
@@ -172,39 +171,51 @@ const deleteSelectedUsers = () => {
 
                 <!-- Button untuk toggle show/hide konten -->
                 <Button size="icon" variant="outline" @click="toggleContentTwo">
-                    <ChevronDown :class="{ 'rotate-180': !showContentTwo }" size="18" />
+                    <ChevronDown :class="{ 'rotate-180': !showContentTwo }" :size="18" />
                 </Button>
             </div>
 
             <!-- Transition untuk smooth animasi -->
             <transition name="slide-fade">
                 <!-- SHOW HIDE DISINI -->
-                <div v-if="showContentTwo" class="grid gap-2 grid-cols-2 md:grid-cols-4">
-                    <div class="col-span-2">
+                <div v-if="showContentTwo" class="grid gap-2 grid-cols-2">
+                    <div>
                         <BarChart :data="data" index="day" :categories="['pendapatan']" :y-formatter="(tick) => {
                             return typeof tick === 'number'
                                 ? `Rp ${new Intl.NumberFormat('id-ID').format(tick)}`
                                 : '';
                         }" :colors="['#58bb69']" />
                     </div>
-                    <div class="flex justify-center items-center bg-neutral-200">
-                        <p>Data 1</p>
+                    <div class="p-2 border border-neutral-300 rounded-lg dark:border-neutral-700">
+                        <p>Top 10 Duta - Minggu 1 Sept</p>
+                        <ul class="list-inside list-decimal">
+                            <li class="font-semibold text-lg">Josephine Lily - Rp10.000.000</li>
+                            <li>Andreas Thon - Rp10.000.000</li>
+                            <li>Wocky Minu - Rp10.000.000</li>
+                            <li>Borodin Dmitry - Rp10.000.000</li>
+                            <li>Josephine Lily - Rp10.000.000</li>
+                            <li>Andreas Thon - Rp10.000.000</li>
+                            <li>Wocky Minu - Rp10.000.000</li>
+                            <li>Borodin Dmitry - Rp10.000.000</li>
+                            <li>Josephine Lily - Rp10.000.000</li>
+                            <li>Andreas Thon - Rp10.000.000</li>
+                        </ul>
                     </div>
-                    <div class="flex justify-center items-center bg-neutral-200">
+                    <!-- <div class="flex justify-center items-center bg-neutral-200">
                         <p>Data 2</p>
-                    </div>
+                    </div> -->
                 </div>
             </transition>
         </section>
 
-        <section class="bg-white p-3 rounded-lg">
+        <section class="bg-white p-3 rounded-lg dark:bg-neutral-800">
             <!-- <p class="font-semibold text-2xl tracking-tight">Overview Minggu 1 Sept</p> -->
             <div v-if="selectedCount > 0" class="mb-3 flex items-center justify-between">
                 <p class="font-semibold tracking-tight text-lg">({{ selectedCount }}) akun dipilih</p>
                 <AlertDialog>
                     <AlertDialogTrigger as-child>
                         <Button variant="destructive" size="icon">
-                            <Trash2 size="18" />
+                            <Trash2 :size="18" />
                         </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent class="p-4">
@@ -237,11 +248,11 @@ const deleteSelectedUsers = () => {
                     <TableBody>
                         <TableRow v-for="user in users" :key="user.id">
                             <TableCell class="p-3">
-                                <input type="checkbox" :id="`user-${user.id}`"
+                                <!-- <input type="checkbox" :id="`user-${user.id}`"
                                     :checked="selectedUsers.includes(user.id)" @change="toggleCheckbox(user.id)"
-                                    class="cursor-pointer w-4 h-4 rounded-md checked:bg-blue-500" />
-                                <!-- <Checkbox :id="`user-${user.id}`" :checked="selectedUsers.includes(user.id)"
-                                    @change="toggleCheckbox(user.id)" /> -->
+                                    class="cursor-pointer w-4 h-4 rounded-md checked:bg-blue-500" /> -->
+                                <Checkbox :id="`user-${user.id}`" :checked="selectedUsers.includes(user.id)"
+                                    @update:checked="(checked) => toggleCheckbox(checked, user.id)" />
                             </TableCell>
                             <TableCell class="font-medium p-3">{{ user.name }}</TableCell>
                             <TableCell class="p-3">{{ user.email }}</TableCell>
@@ -249,7 +260,7 @@ const deleteSelectedUsers = () => {
                                 <DropdownMenu>
                                     <DropdownMenuTrigger as-child>
                                         <Button size="icon" variant="outline">
-                                            <Ellipsis size="18" />
+                                            <Ellipsis :size="18" />
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
@@ -259,15 +270,15 @@ const deleteSelectedUsers = () => {
                                         <DropdownMenuItem as-child>
                                             <Link :href="route('users.edit', user.id)"
                                                 class="cursor-pointer flex gap-1">
-                                            <Pencil size="18" /> Ubah
+                                            <Pencil :size="18" /> Ubah
                                             </Link>
                                         </DropdownMenuItem>
                                         <!-- Item untuk hapus dengan background merah -->
                                         <DropdownMenuItem as-child>
                                             <AlertDialog>
                                                 <AlertDialogTrigger
-                                                    class="flex items-center gap-1.5 text-sm px-1.5 py-1 w-full text-red-600 bg-red-50 hover:bg-red-100">
-                                                    <Trash2 size="18" />Hapus
+                                                    class="flex items-center gap-1.5 text-sm px-1.5 py-1 w-full rounded text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-800 dark:hovere:bg-red-700 dark:text-red-200">
+                                                    <Trash2 :size="18" />Hapus
                                                 </AlertDialogTrigger>
                                                 <AlertDialogContent class="p-4">
                                                     <AlertDialogHeader>

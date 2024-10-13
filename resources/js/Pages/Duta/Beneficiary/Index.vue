@@ -7,17 +7,17 @@ import DashboardLayout from '@/Layouts/DashboardLayout.vue'
 <template>
 
     <Head>
-        <title>Title Goes Here</title>
+        <title>Penerima Manfaat</title>
     </Head>
 
     <DashboardLayout>
         <template #header>
-            <h1 class="text-xl font-semibold tracking-tight">Title Goes Here</h1>
+            <h1 class="text-xl font-semibold tracking-tight">Penerima Manfaat</h1>
         </template>
 
         <section class="bg-white p-3 rounded-lg mb-3 dark:bg-neutral-800">
             <div class="mb-3">
-                <p class="font-semibold text-2xl tracking-tight">Judul Goes Here</p>
+                <p class="font-semibold text-2xl tracking-tight">Penerima Manfaat</p>
                 <p class="text-sm text-neutral-500">Lorem ipsum, dolor sit amet consectetur adipisicing elit. Eveniet
                     veniam,
                     vero omnis dolores temporibus sed?</p>

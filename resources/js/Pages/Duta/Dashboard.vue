@@ -15,7 +15,7 @@ import DashboardLayout from '@/Layouts/DashboardLayout.vue'
             <h1 class="text-xl font-semibold tracking-tight">Dashboard Duta</h1>
         </template>
 
-        <section class="bg-white p-3 rounded-lg mb-3">
+        <section class="bg-white p-3 rounded-lg mb-3 dark:bg-neutral-800">
             <div class="mb-3">
                 <p class="font-semibold text-2xl tracking-tight">Dashboard Duta</p>
                 <p class="text-sm text-neutral-500">Lorem ipsum, dolor sit amet consectetur adipisicing elit. Eveniet

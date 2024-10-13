@@ -1,29 +1,62 @@
 <script setup>
-import { ref, computed, watchEffect } from 'vue';
-import { Button } from '@/components/ui/button';
+import { ref, computed, watchEffect, onMounted } from 'vue';
+import { Button } from '@/Components/ui/button';
+import { Link, usePage } from '@inertiajs/vue3';
 import {
     Sheet,
-    SheetClose,
     SheetContent,
-    SheetDescription,
     SheetFooter,
     SheetHeader,
     SheetTitle,
     SheetTrigger,
-} from '@/components/ui/sheet';
+} from '@/Components/ui/sheet';
 import {
     ChevronLeftIcon,
     ChevronRightIcon,
     HomeIcon,
     UsersIcon,
-    FolderIcon,
-    CalendarIcon,
-    InboxIcon,
-    ChartBarIcon,
-    Menu,
-    LogOut,
+    ReceiptTextIcon,
+    HeartHandshakeIcon,
+    SquareUserIcon,
+    MenuIcon,
+    LogOutIcon,
+    SunIcon,
+    MoonIcon,
 } from 'lucide-vue-next';
 
+// Ambil data user dari props Inertia
+const page = usePage()
+const user = computed(() => page.props.auth.user) // Role pengguna dari backend
+
+// ========= DARK MODE VARIABLES =========
+// State to track dark mode
+const isDarkMode = ref(false);
+// Fungsi untuk toggle mode
+const toggleDarkMode = () => {
+    isDarkMode.value = !isDarkMode.value
+    if (isDarkMode.value) {
+        document.documentElement.classList.add('dark')
+        localStorage.setItem('theme', 'dark')
+    } else {
+        document.documentElement.classList.remove('dark')
+        localStorage.setItem('theme', 'light')
+    }
+}
+
+// Ambil tema dari localStorage saat halaman dimuat
+onMounted(() => {
+    const savedTheme = localStorage.getItem('theme')
+    if (savedTheme === 'dark') {
+        isDarkMode.value = true
+        document.documentElement.classList.add('dark')
+    } else {
+        isDarkMode.value = false
+        document.documentElement.classList.remove('dark')
+    }
+})
+// ========= DARK MODE VARIABLES =========
+
+// ========= SIDEBAR VARIABLES =========
 // Sidebar expansion state
 const isExpanded = ref(true);
 
@@ -33,14 +66,22 @@ const toggleSidebar = () => {
 };
 
 // Menu items
-const menuItems = [
-    { name: 'Dashboard', icon: HomeIcon },
-    { name: 'Team', icon: UsersIcon },
-    { name: 'Projects', icon: FolderIcon },
-    { name: 'Calendar', icon: CalendarIcon },
-    { name: 'Documents', icon: InboxIcon },
-    { name: 'Reports', icon: ChartBarIcon },
-];
+const menuItems = ref([
+    { name: 'Dasbor', icon: HomeIcon, href: route('dashboard'), roles: ['admin', 'pengurus', 'duta'] },
+    { name: 'Transaksi', icon: ReceiptTextIcon, href: route('transactions.index'), roles: ['pengurus', 'duta'] },
+    { name: 'Penerima Manfaat', icon: HeartHandshakeIcon, href: route('beneficiaries.index'), roles: ['pengurus', 'duta'] },
+    { name: 'Akun', icon: UsersIcon, href: route('users.index'), roles: ['admin'] },
+    { name: 'Profil', icon: SquareUserIcon, href: route('profile.edit'), roles: ['admin', 'pengurus', 'duta'] },
+]);
+
+const filteredMenuItems = computed(() => {
+    if (!user.value || !user.value.role) return [];
+
+    return menuItems.value.filter(item =>
+        item.roles.includes(user.value.role) // user.value.role
+    );
+});
+
 
 // Detect if the viewport is tablet size (<= 768px)
 const isTablet = ref(window.innerWidth <= 768);
@@ -57,13 +98,14 @@ watchEffect(() => {
         window.removeEventListener('resize', updateIsTablet);
     };
 });
+// ========= SIDEBAR VARIABLES =========
 </script>
 
 <template>
-    <div class="flex h-screen bg-gray-100">
+    <div :class="['flex h-screen bg-neutral-100 dark:bg-neutral-900', { 'dark': isDarkMode }]">
         <!-- Sidebar -->
         <div v-if="!isTablet" :class="[
-            'flex flex-col h-full bg-white transition-all duration-300 border-r border-neutral-300 ease-in-out',
+            'flex flex-col h-full bg-white transition-all duration-300 border-r border-neutral-300 ease-in-out dark:bg-neutral-800 dark:border-neutral-700',
             isExpanded ? 'w-64' : 'w-20'
         ]">
             <!-- Logo -->
@@ -75,14 +117,16 @@ watchEffect(() => {
             <!-- Nav Items -->
             <nav class="flex-1 overflow-y-auto">
                 <ul class="p-3 space-y-2">
-                    <li v-for="item in menuItems" :key="item.name">
+                    <li v-for="item in filteredMenuItems" :key="item.name">
+                        <Link :href="item.href">
                         <Button variant="ghost" :class="[
-                            'w-full justify-start hover:bg-neutral-200 transition-colors duration-200',
+                            'w-full justify-start hover:bg-neutral-200 transition-colors duration-200 dark:hover:bg-neutral-700',
                             isExpanded ? 'px-4' : 'px-2'
                         ]">
                             <component :is="item.icon" :class="['h-5 w-5', isExpanded ? 'mr-4' : 'mx-auto']" />
                             <span v-if="isExpanded" class="truncate">{{ item.name }}</span>
                         </Button>
+                        </Link>
                     </li>
                 </ul>
             </nav>
@@ -90,13 +134,15 @@ watchEffect(() => {
             <!-- Footer Logout -->
             <div class="p-3">
                 <div
-                    :class="['flex justify-between items-center', isExpanded ? 'p-2 border border-neutral-200 rounded-lg' : '']">
+                    :class="['flex justify-between items-center', isExpanded ? 'p-2 border border-neutral-200 rounded-lg dark:border-neutral-700' : '']">
                     <div v-if="isExpanded">
-                        <p class="font-semibold tracking-tight -mb-1">Nama User</p>
-                        <p class="text-sm text-neutral-400">Role User</p>
+                        <p class="font-semibold tracking-tight -mb-1">{{ user.name }}</p>
+                        <p class="text-sm text-neutral-400 first-letter:uppercase">{{ user.role }}</p>
                     </div>
-                    <Button variant="outline" :size="[isExpanded ? 'icon' : 'default']">
-                        <LogOut size="18" />
+                    <Button variant="outline" :size="[isExpanded ? 'icon' : 'default']" as-child>
+                        <Link :href="route('logout')" method="post" as="button">
+                        <LogOutIcon size="18" />
+                        </Link>
                     </Button>
                 </div>
             </div>
@@ -104,51 +150,62 @@ watchEffect(() => {
 
         <!-- Main Content -->
         <div class="flex-1 overflow-y-auto">
-            <header class="bg-white shadow">
-                <div :class="['p-3 flex items-center', isTablet ? 'gap-3' : 'gap-2']">
-                    <!-- Sheet Component -->
-                    <Sheet v-if="isTablet">
-                        <SheetTrigger as-child>
-                            <Button size="icon" variant="outline">
-                                <Menu size="18" />
-                            </Button>
-                        </SheetTrigger>
-                        <SheetContent side="left" class="p-3 flex flex-col h-full">
-                            <SheetHeader class="my-5">
-                                <SheetTitle class="font-semibold tracking-tight">Qolbu App</SheetTitle>
-                            </SheetHeader>
-                            <ul class="space-y-2">
-                                <li v-for="item in menuItems" :key="item.name">
-                                    <Button variant="ghost"
-                                        class="w-full justify-start hover:bg-neutral-200 transition-colors duration-200">
-                                        <component :is="item.icon"
-                                            :class="['h-5 w-5', isExpanded ? 'mr-4' : 'mx-auto']" />
-                                        <span v-if="isExpanded" class="truncate">{{ item.name }}</span>
-                                    </Button>
-                                </li>
-                            </ul>
-                            <SheetFooter class="mt-auto">
-                                <div
-                                    :class="['flex justify-between items-center', isExpanded ? 'p-2 border border-neutral-200 rounded-lg' : '']">
-                                    <div v-if="isExpanded">
-                                        <p class="font-semibold tracking-tight -mb-1">Nama User</p>
-                                        <p class="text-sm text-neutral-400">Role User</p>
+            <header class="bg-white shadow dark:bg-neutral-800">
+                <div class="p-3 flex justify-between items-center">
+                    <span :class="['flex items-center', isTablet ? 'gap-3' : 'gap-2']">
+                        <!-- Sheet Component -->
+                        <Sheet v-if="isTablet">
+                            <SheetTrigger as-child>
+                                <Button size="icon" variant="outline">
+                                    <MenuIcon size="18" />
+                                </Button>
+                            </SheetTrigger>
+                            <SheetContent side="left" class="p-3 flex flex-col h-full">
+                                <SheetHeader class="my-5">
+                                    <SheetTitle class="font-semibold tracking-tight">Qolbu App</SheetTitle>
+                                </SheetHeader>
+                                <ul class="space-y-2">
+                                    <li v-for="item in filteredMenuItems" :key="item.name">
+                                        <Link :href="item.href">
+                                        <Button variant="ghost"
+                                            class="w-full justify-start hover:bg-neutral-200 transition-colors duration-200">
+                                            <component :is="item.icon"
+                                                :class="['h-5 w-5', isExpanded ? 'mr-4' : 'mx-auto']" />
+                                            <span v-if="isExpanded" class="truncate">{{ item.name }}</span>
+                                        </Button>
+                                        </Link>
+                                    </li>
+                                </ul>
+                                <SheetFooter class="mt-auto">
+                                    <div
+                                        :class="['flex justify-between items-center', isExpanded ? 'p-2 border border-neutral-200 rounded-lg' : '']">
+                                        <div v-if="isExpanded">
+                                            <p class="font-semibold tracking-tight -mb-1">{{ user.name }}</p>
+                                            <p class="text-sm text-neutral-400 first-letter:uppercase">{{ user.role }}
+                                            </p>
+                                        </div>
+                                        <Button variant="outline" :size="[isExpanded ? 'icon' : 'default']" as-child>
+                                            <Link :href="route('logout')" method="post" as="button">
+                                            <LogOutIcon size="18" />
+                                            </Link>
+                                        </Button>
                                     </div>
-                                    <Button variant="outline" :size="[isExpanded ? 'icon' : 'default']">
-                                        <LogOut size="18" />
-                                    </Button>
-                                </div>
-                            </SheetFooter>
-                        </SheetContent>
-                    </Sheet>
+                                </SheetFooter>
+                            </SheetContent>
+                        </Sheet>
 
-                    <Button v-if="!isTablet" variant="outline" size="icon" @click="toggleSidebar">
-                        <ChevronLeftIcon v-if="isExpanded" size="18" />
-                        <ChevronRightIcon v-else size="18" />
+                        <Button v-if="!isTablet" variant="outline" size="icon" @click="toggleSidebar">
+                            <ChevronLeftIcon v-if="isExpanded" size="18" />
+                            <ChevronRightIcon v-else size="18" />
+                        </Button>
+                        <slot name="header">
+                            <h1 class="text-xl font-semibold tracking-tight">Header</h1>
+                        </slot>
+                    </span>
+
+                    <Button variant="outline" @click="toggleDarkMode" size="icon">
+                        <component :is="isDarkMode ? MoonIcon : SunIcon" class="w-5 h-5" />
                     </Button>
-                    <slot name="header">
-                        <h1 class="text-xl font-semibold tracking-tight">Header</h1>
-                    </slot>
                 </div>
             </header>
             <main>

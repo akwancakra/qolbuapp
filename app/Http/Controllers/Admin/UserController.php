@@ -43,6 +43,7 @@ class UserController extends Controller
                 'email' => 'bob@example.com'
             ],
         ];
+
         return Inertia::render('Admin/User/Index', ['users' => $users]);
     }
 

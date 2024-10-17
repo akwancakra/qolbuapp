@@ -19,6 +19,10 @@ use Inertia\Inertia;
 //     ]);
 // });
 
+// Route::get('/dashboard', function () {
+//     return Inertia::render('Dashboard');
+// })->middleware(['auth', 'verified'])->name('dashboard');
+
 Route::get('/', function () {
     if (!Auth::check()) {
         return redirect()->route('login');
@@ -38,10 +42,6 @@ Route::get('/', function () {
     }
 })->name('dashboard');
 
-// Route::get('/dashboard', function () {
-//     return Inertia::render('Dashboard');
-// })->middleware(['auth', 'verified'])->name('dashboard');
-
 Route::middleware(['auth', 'role:admin'])->prefix('ad')->group(function () {
     Route::get('/dashboard', function () {
         return Inertia::render('Admin/Dashboard');
@@ -51,25 +51,55 @@ Route::middleware(['auth', 'role:admin'])->prefix('ad')->group(function () {
 });
 
 Route::middleware(['auth', 'role:pengurus'])->prefix('pe')->group(function () {
-    // Define routes for 'pengurus' role
     Route::get('/dashboard', function () {
         return Inertia::render('Pengurus/Dashboard');
     })->name('pengurus.dashboard');
 
-    Route::resource('transactions', PengurusTransactionController::class);
-    Route::resource('beneficiaries', PengurusBeneficiaryController::class);
+    Route::resource('transactions', PengurusTransactionController::class)->names([
+        'index' => 'pengurus.transactions.index',
+        'create' => 'pengurus.transactions.create',
+        'store' => 'pengurus.transactions.store',
+        'show' => 'pengurus.transactions.show',
+        'edit' => 'pengurus.transactions.edit',
+        'update' => 'pengurus.transactions.update',
+        'destroy' => 'pengurus.transactions.destroy',
+    ]);
+
+    Route::resource('beneficiaries', PengurusBeneficiaryController::class)->names([
+        'index' => 'pengurus.beneficiaries.index',
+        'create' => 'pengurus.beneficiaries.create',
+        'store' => 'pengurus.beneficiaries.store',
+        'show' => 'pengurus.beneficiaries.show',
+        'edit' => 'pengurus.beneficiaries.edit',
+        'update' => 'pengurus.beneficiaries.update',
+        'destroy' => 'pengurus.beneficiaries.destroy',
+    ]);
 });
 
 Route::middleware(['auth', 'role:duta'])->prefix('du')->group(function () {
-    // Define routes for 'duta' role
     Route::get('/dashboard', function () {
         return Inertia::render('Duta/Dashboard');
     })->name('duta.dashboard');
 
-    Route::resource('transactions', DutaTransactionController::class);
-    Route::resource('beneficiaries', DutaBeneficiaryController::class);
-    // Route::resource('keuangan', UserController::class);
-    // Route::resource('member', UserController::class);
+    Route::resource('transactions', DutaTransactionController::class)->names([
+        'index' => 'duta.transactions.index',
+        // 'create' => 'duta.transactions.create',
+        // 'store' => 'duta.transactions.store',
+        // 'show' => 'duta.transactions.show',
+        // 'edit' => 'duta.transactions.edit',
+        // 'update' => 'duta.transactions.update',
+        // 'destroy' => 'duta.transactions.destroy',
+    ]);
+
+    Route::resource('beneficiaries', DutaBeneficiaryController::class)->names([
+        'index' => 'duta.beneficiaries.index',
+        // 'create' => 'duta.beneficiaries.create',
+        // 'store' => 'duta.beneficiaries.store',
+        // 'show' => 'duta.beneficiaries.show',
+        // 'edit' => 'duta.beneficiaries.edit',
+        // 'update' => 'duta.beneficiaries.update',
+        // 'destroy' => 'duta.beneficiaries.destroy',
+    ]);
 });
 
 Route::middleware('auth')->group(function () {

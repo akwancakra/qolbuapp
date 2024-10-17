@@ -11,14 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('transactions', function (Blueprint $table) {
+        Schema::create('dutas', function (Blueprint $table) {
             $table->string('id', 15)->primary();
-            $table->timestamps(); // created_at dan updated_at
-            $table->date('transfer_date');
-            $table->string('donor_name', 100);
-            $table->string('method', 50);
-            $table->string('type', 50);
-            $table->integer('amount')->unsigned();
+            $table->string('name', 100);
+            $table->string('code', 8);
+            $table->string('phone_number', 14);
+            $table->timestamps();
         });
     }
 
@@ -27,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('transactions');
+        Schema::dropIfExists('dutas');
     }
 };

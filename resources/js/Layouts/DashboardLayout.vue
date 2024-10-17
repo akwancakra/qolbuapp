@@ -27,6 +27,8 @@ import {
 // Ambil data user dari props Inertia
 const page = usePage()
 const user = computed(() => page.props.auth.user) // Role pengguna dari backend
+// const currentUrl = computed(() => page.url)
+// console.log(String(currentUrl.value).replace(/^\/(pe|ad|du)\//, '').startsWith("transactions"));
 
 // ========= DARK MODE VARIABLES =========
 // State to track dark mode
@@ -67,11 +69,11 @@ const toggleSidebar = () => {
 
 // Menu items
 const menuItems = ref([
-    { name: 'Dasbor', icon: HomeIcon, href: route('dashboard'), roles: ['admin', 'pengurus', 'duta'] },
-    { name: 'Transaksi', icon: ReceiptTextIcon, href: route('transactions.index'), roles: ['pengurus', 'duta'] },
-    { name: 'Penerima Manfaat', icon: HeartHandshakeIcon, href: route('beneficiaries.index'), roles: ['pengurus', 'duta'] },
-    { name: 'Akun', icon: UsersIcon, href: route('users.index'), roles: ['admin'] },
-    { name: 'Profil', icon: SquareUserIcon, href: route('profile.edit'), roles: ['admin', 'pengurus', 'duta'] },
+    { name: 'Dasbor', icon: HomeIcon, href: route('dashboard'), roles: ['admin', 'pengurus', 'duta'], prefix: 'dashboard' },
+    { name: 'Transaksi', icon: ReceiptTextIcon, href: user.value.role === 'pengurus' ? route('pengurus.transactions.index') : route('duta.transactions.index'), roles: ['pengurus', 'duta'], prefix: 'transactions' },
+    { name: 'Penerima Manfaat', icon: HeartHandshakeIcon, href: user.value.role === 'pengurus' ? route('pengurus.beneficiaries.index') : route('duta.beneficiaries.index'), roles: ['pengurus', 'duta'], prefix: 'beneficiaries' },
+    { name: 'Akun', icon: UsersIcon, href: route('users.index'), roles: ['admin'], prefix: 'users' },
+    { name: 'Profil', icon: SquareUserIcon, href: route('profile.edit'), roles: ['admin', 'pengurus', 'duta'], prefix: 'profile' },
 ]);
 
 const filteredMenuItems = computed(() => {
@@ -81,6 +83,7 @@ const filteredMenuItems = computed(() => {
         item.roles.includes(user.value.role) // user.value.role
     );
 });
+
 
 
 // Detect if the viewport is tablet size (<= 768px)
@@ -120,8 +123,11 @@ watchEffect(() => {
                     <li v-for="item in filteredMenuItems" :key="item.name">
                         <Link :href="item.href">
                         <Button variant="ghost" :class="[
-                            'w-full justify-start hover:bg-neutral-200 transition-colors duration-200 dark:hover:bg-neutral-700',
-                            isExpanded ? 'px-4' : 'px-2'
+                            'w-full justify-start transition-colors duration-200',
+                            isExpanded ? 'px-4' : 'px-2',
+                            // String(currentUrl.value).replace(/^\/(pe|ad|du)\//, '').startsWith(item.prefix)
+                            //     ? 'bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-800'
+                            //     : 'hover:bg-neutral-200 dark:hover:bg-neutral-700'
                         ]">
                             <component :is="item.icon" :class="['h-5 w-5', isExpanded ? 'mr-4' : 'mx-auto']" />
                             <span v-if="isExpanded" class="truncate">{{ item.name }}</span>
@@ -134,7 +140,7 @@ watchEffect(() => {
             <!-- Footer Logout -->
             <div class="p-3">
                 <div
-                    :class="['flex justify-between items-center', isExpanded ? 'p-2 border border-neutral-200 rounded-lg dark:border-neutral-700' : '']">
+                    :class="['flex justify-between items-center', { 'p-2 border border-neutral-200 rounded-lg dark:border-neutral-700': isExpanded }]">
                     <div v-if="isExpanded">
                         <p class="font-semibold tracking-tight -mb-1">{{ user.name }}</p>
                         <p class="text-sm text-neutral-400 first-letter:uppercase">{{ user.role }}</p>
@@ -168,7 +174,7 @@ watchEffect(() => {
                                     <li v-for="item in filteredMenuItems" :key="item.name">
                                         <Link :href="item.href">
                                         <Button variant="ghost"
-                                            class="w-full justify-start hover:bg-neutral-200 transition-colors duration-200">
+                                            class="w-full justify-start hover:bg-neutral-200 transition-colors duration-200 dark:hover:bg-neutral-700">
                                             <component :is="item.icon"
                                                 :class="['h-5 w-5', isExpanded ? 'mr-4' : 'mx-auto']" />
                                             <span v-if="isExpanded" class="truncate">{{ item.name }}</span>
@@ -178,7 +184,7 @@ watchEffect(() => {
                                 </ul>
                                 <SheetFooter class="mt-auto">
                                     <div
-                                        :class="['flex justify-between items-center', isExpanded ? 'p-2 border border-neutral-200 rounded-lg' : '']">
+                                        :class="['flex justify-between items-center', isExpanded ? 'p-2 border border-neutral-200 rounded-lg dark:border-neutral-700' : '']">
                                         <div v-if="isExpanded">
                                             <p class="font-semibold tracking-tight -mb-1">{{ user.name }}</p>
                                             <p class="text-sm text-neutral-400 first-letter:uppercase">{{ user.role }}

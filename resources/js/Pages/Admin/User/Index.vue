@@ -83,18 +83,18 @@ const deleteSelectedUsers = () => {
 <template>
 
     <Head>
-        <title>Dashboard User</title>
+        <title>Daftar Akun</title>
     </Head>
 
     <DashboardLayout>
         <template #header>
-            <h1 class="text-xl font-semibold tracking-tight">Dashboard User</h1>
+            <h1 class="text-xl font-semibold tracking-tight">Daftar Akun</h1>
         </template>
 
         <section class="bg-white p-3 rounded-lg mb-3 dark:bg-neutral-800">
             <div class="flex justify-between items-center mb-3">
                 <div>
-                    <p class="font-semibold text-2xl tracking-tight">Transferan Minggu 1 Sept</p>
+                    <p class="font-semibold text-2xl tracking-tight">QolbuApp - Akun</p>
                     <p class="text-sm text-neutral-500">Lorem ipsum, dolor sit amet consectetur adipisicing elit.
                         Eveniet
                         veniam, vero omnis dolores temporibus sed?</p>
@@ -122,16 +122,16 @@ const deleteSelectedUsers = () => {
                     <Input type="text" id="name" />
                 </div>
                 <div>
-                    <Label for="type">Tipe Waktu</Label>
+                    <Label for="type">Tipe Peran</Label>
                     <Select>
                         <SelectTrigger>
-                            <SelectValue placeholder="Pilih Waktu" />
+                            <SelectValue placeholder="Pilih Tipe Peran" />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectGroup>
-                                <SelectItem value="weekly">Per-minggu</SelectItem>
-                                <SelectItem value="monthly">Per-bulan</SelectItem>
-                                <SelectItem value="yearly">Per-tahun</SelectItem>
+                                <SelectItem value="admin">Admin</SelectItem>
+                                <SelectItem value="pengurus">Pengurus</SelectItem>
+                                <SelectItem value="duta">Duta</SelectItem>
                             </SelectGroup>
                         </SelectContent>
                     </Select>
@@ -172,6 +172,7 @@ const deleteSelectedUsers = () => {
                         <TableRow>
                             <TableHead>#</TableHead>
                             <TableHead>Name</TableHead>
+                            <TableHead>Role</TableHead>
                             <TableHead>Email</TableHead>
                             <TableHead>Actions</TableHead>
                         </TableRow>
@@ -186,6 +187,7 @@ const deleteSelectedUsers = () => {
                                     @update:checked="(checked) => toggleCheckbox(checked, user.id)" />
                             </TableCell>
                             <TableCell class="font-medium p-3">{{ user.name }}</TableCell>
+                            <TableCell class="p-3 first-letter:uppercase">{{ user.role }}</TableCell>
                             <TableCell class="p-3">{{ user.email }}</TableCell>
                             <TableCell class="p-3">
                                 <DropdownMenu>

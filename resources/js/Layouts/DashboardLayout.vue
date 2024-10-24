@@ -24,6 +24,13 @@ import {
     MoonIcon,
 } from 'lucide-vue-next';
 
+const props = defineProps({
+    containerClass: {
+        type: String,
+        default: null,
+    },
+});
+
 // Ambil data user dari props Inertia
 const page = usePage()
 const user = computed(() => page.props.auth.user) // Role pengguna dari backend
@@ -83,8 +90,6 @@ const filteredMenuItems = computed(() => {
         item.roles.includes(user.value.role) // user.value.role
     );
 });
-
-
 
 // Detect if the viewport is tablet size (<= 768px)
 const isTablet = ref(window.innerWidth <= 768);
@@ -215,7 +220,7 @@ watchEffect(() => {
                 </div>
             </header>
             <main>
-                <div class="max-w-7xl mx-auto py-4 px-2 sm:px-3 lg:px-4">
+                <div :class="`${containerClass ?? 'max-w-7xl'} mx-auto py-4 px-2 sm:px-3 lg:px-4`">
                     <slot />
                 </div>
             </main>

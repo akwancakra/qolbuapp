@@ -20,26 +20,31 @@ class UserController extends Controller
             [
                 'id' => 1,
                 'name' => 'John Doe',
+                'role' => 'admin',
                 'email' => 'john@example.com'
             ],
             [
                 'id' => 2,
                 'name' => 'Bobby Marshal',
+                'role' => 'pengurus',
                 'email' => 'bobby@example.com'
             ],
             [
                 'id' => 3,
                 'name' => 'Jane Doe',
+                'role' => 'pengurus',
                 'email' => 'jane@example.com'
             ],
             [
                 'id' => 4,
                 'name' => 'Alice Brown',
+                'role' => 'pengurus',
                 'email' => 'alice@example.com'
             ],
             [
                 'id' => 5,
                 'name' => 'Bob Smith',
+                'role' => 'duta',
                 'email' => 'bob@example.com'
             ],
         ];

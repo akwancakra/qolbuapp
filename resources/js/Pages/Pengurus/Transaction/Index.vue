@@ -64,13 +64,15 @@ import { Checkbox } from "@/Components/ui/checkbox";
 import { Transaction } from "@/types";
 import DashboardLayout from "@/Layouts/DashboardLayout.vue";
 import { useDateFormat } from "@vueuse/core";
-import { cn, formatCurrency } from "@/lib/utils";
+import { cn, formatCurrency, formatNumber } from "@/lib/utils";
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
 } from "@/Components/ui/popover";
 import { Calendar } from "@/Components/ui/calendar";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/Components/ui/tooltip";
+import { Separator } from "@/Components/ui/separator";
 
 const props = defineProps<{
     transactions: Transaction[];
@@ -170,7 +172,7 @@ const exportTransactions = () => {
         <title>Pendapatan Transferan</title>
     </Head>
 
-    <DashboardLayout>
+    <DashboardLayout :containerClass="'max-w-screen-2xl'">
         <template #header>
             <h1 class="text-xl font-semibold tracking-tight">
                 Pendapatan Transferan
@@ -183,7 +185,7 @@ const exportTransactions = () => {
                     <p class="font-semibold text-2xl tracking-tight">
                         Transferan Minggu 1 Sept
                     </p>
-                    <p class="text-sm text-neutral-500">
+                    <p class="text-sm text-neutral-500 dark:text-neutral-400">
                         Lorem ipsum, dolor sit amet consectetur adipisicing
                         elit. Eveniet veniam, vero omnis dolores temporibus sed?
                     </p>
@@ -246,31 +248,48 @@ const exportTransactions = () => {
             </div>
         </section>
 
+        <!-- <section class="bg-white p-3 rounded-lg mb-3 dark:bg-neutral-800">
+            <div>
+                <p class="font-semibold text-2xl tracking-tight">
+                    Keseluruhan Per-Bulan
+                </p>
+                <p class="text-sm text-neutral-500">
+                    Lorem ipsum, dolor sit amet consectetur adipisicing
+                    elit. Eveniet veniam, vero omnis dolores temporibus sed?
+                </p>
+            </div>
+        </section> -->
+
         <section class="bg-white p-3 rounded-lg mb-3 dark:bg-neutral-800">
             <div :class="[
-                'flex justify-between items-center',
+                'flex justify-between',
                 { 'mb-3': showContentTwo },
             ]">
                 <div>
                     <p class="font-semibold text-2xl tracking-tight">
                         Overview Minggu 1 Sept
                     </p>
-                    <p class="text-sm text-neutral-500">
+                    <p class="text-sm text-neutral-500 dark:text-neutral-400">
                         Lorem ipsum, dolor sit amet consectetur adipisicing
                         elit. Eveniet veniam, vero omnis dolores temporibus sed?
                     </p>
                 </div>
 
                 <!-- Button untuk toggle show/hide konten -->
-                <Button size="icon" variant="outline" @click="toggleContentTwo">
+                <Button size="icon" variant="outline" @click="toggleContentTwo" class="min-w-10">
                     <ChevronDownIcon :class="{ 'rotate-180': !showContentTwo }" :size="18" />
                 </Button>
+            </div>
+
+            <div class="my-3 border border-neutral-300 p-2 rounded-lg dark:border-neutral-600">
+                <p class="text-sm text-neutral-500 -mb-1 dark:text-neutral-400">Total transferan pada minggu 1 sept</p>
+                <p class="font-semibold text-2xl tracking-tight break-words">Rp32.000.000</p>
             </div>
 
             <!-- Transition untuk smooth animasi -->
             <transition name="slide-fade">
                 <!-- SHOW HIDE DISINI -->
-                <div v-if="showContentTwo" class="grid gap-2 grid-cols-2">
+                <div v-if="showContentTwo" class="grid gap-2 lg:grid-cols-2">
                     <div>
                         <BarChart :data="data" index="day" :categories="['pendapatan']" :y-formatter="(tick) => {
                             return typeof tick === 'number'
@@ -282,8 +301,70 @@ const exportTransactions = () => {
                             " :colors="['#58bb69']" />
                     </div>
                     <div class="p-2 border border-neutral-300 rounded-lg dark:border-neutral-700">
-                        <p>Top 10 Duta - Minggu 1 Sept</p>
-                        <ul class="list-inside list-decimal">
+                        <p class="text-center font-semibold tracking-tight">Top 10 Duta - Minggu 1 Sept</p>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead class="h-8">#</TableHead>
+                                    <TableHead class="h-8">Nama</TableHead>
+                                    <TableHead class="h-8">Nominal</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                <TableRow class="bg-yellow-100 font-semibold dark:bg-yellow-500 dark:text-yellow-100">
+                                    <TableCell class="py-1.5">1</TableCell>
+                                    <TableCell class="py-1.5">Josephine Lily</TableCell>
+                                    <TableCell class="py-1.5">Rp10.000.000</TableCell>
+                                </TableRow>
+                                <TableRow class="bg-gray-100 font-semibold dark:bg-gray-500 dark:text-gray-100">
+                                    <TableCell class="py-1.5">2</TableCell>
+                                    <TableCell class="py-1.5">Andreas Thon</TableCell>
+                                    <TableCell class="py-1.5">Rp9.500.000</TableCell>
+                                </TableRow>
+                                <TableRow
+                                    class="bg-yellow-700 text-white font-semibold dark:bg-yellow-800 dark:text-yellow-100 hover:text-white hover:bg-yellow-800">
+                                    <TableCell class="py-1.5">3</TableCell>
+                                    <TableCell class="py-1.5">Andreas Thon</TableCell>
+                                    <TableCell class="py-1.5">Rp9.500.000</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell class="py-1.5">4</TableCell>
+                                    <TableCell class="py-1.5">Andreas Thon</TableCell>
+                                    <TableCell class="py-1.5">Rp9.500.000</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell class="py-1.5">5</TableCell>
+                                    <TableCell class="py-1.5">Andreas Thon</TableCell>
+                                    <TableCell class="py-1.5">Rp9.500.000</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell class="py-1.5">6</TableCell>
+                                    <TableCell class="py-1.5">Andreas Thon</TableCell>
+                                    <TableCell class="py-1.5">Rp9.500.000</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell class="py-1.5">7</TableCell>
+                                    <TableCell class="py-1.5">Andreas Thon</TableCell>
+                                    <TableCell class="py-1.5">Rp9.500.000</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell class="py-1.5">8</TableCell>
+                                    <TableCell class="py-1.5">Andreas Thon</TableCell>
+                                    <TableCell class="py-1.5">Rp9.500.000</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell class="py-1.5">9</TableCell>
+                                    <TableCell class="py-1.5">Andreas Thon</TableCell>
+                                    <TableCell class="py-1.5">Rp9.500.000</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell class="py-1.5">10</TableCell>
+                                    <TableCell class="py-1.5">Andreas Thon</TableCell>
+                                    <TableCell class="py-1.5">Rp9.500.000</TableCell>
+                                </TableRow>
+                            </TableBody>
+                        </Table>
+                        <!-- <ul class="list-inside list-decimal">
                             <li class="font-semibold text-lg">
                                 Josephine Lily - Rp10.000.000
                             </li>
@@ -296,16 +377,22 @@ const exportTransactions = () => {
                             <li>Borodin Dmitry - Rp10.000.000</li>
                             <li>Josephine Lily - Rp10.000.000</li>
                             <li>Andreas Thon - Rp10.000.000</li>
-                        </ul>
+                        </ul> -->
                     </div>
                     <!-- <div class="flex justify-center items-center bg-neutral-200">
                         <p>Data 2</p>
                     </div> -->
                 </div>
             </transition>
+
+            <!-- <Separator class="my-3" /> -->
         </section>
 
         <section class="bg-white p-3 rounded-lg dark:bg-neutral-800">
+            <div>
+
+            </div>
+
             <div class="mb-3 flex items-center justify-between">
                 <p v-if="selectedCount > 0" class="font-semibold tracking-tight text-lg">
                     ({{ selectedCount }}) transaksi dipilih
@@ -396,17 +483,25 @@ const exportTransactions = () => {
                         <TableRow>
                             <TableHead></TableHead>
                             <TableHead>#</TableHead>
-                            <TableHead>Duta</TableHead>
-                            <TableHead>Donatur</TableHead>
-                            <TableHead>Transfer Date</TableHead>
-                            <TableHead>Nominal</TableHead>
-                            <TableHead>Metode</TableHead>
+                            <TableHead class="min-w-[120px]">Tgl Submit</TableHead>
+                            <TableHead class="min-w-[120px]">Tgl Transfer</TableHead>
+                            <TableHead class="min-w-[150px]">Duta</TableHead>
+                            <TableHead class="min-w-[150px]">Donatur</TableHead>
+                            <TableHead class="min-w-[120px]">Metode</TableHead>
                             <TableHead>Jenis</TableHead>
+                            <TableHead>Nominal</TableHead>
+                            <TableHead>20%</TableHead>
+                            <TableHead>Saldo</TableHead>
+                            <TableHead>Yayasan</TableHead>
+                            <TableHead>Total</TableHead>
+                            <TableHead>FKY</TableHead>
+                            <TableHead>Hak</TableHead>
                             <TableHead>Aksi</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        <TableRow v-for="(transaction, index) in transactions" :key="index">
+                        <TableRow v-for="(transaction, index) in transactions" :key="index"
+                            class="odd:bg-neutral-100 even:bg-white dark:even:bg-neutral-700 dark:odd:bg-neutral-800">
                             <TableCell class="p-3">
                                 <Checkbox :id="`transaction-${transaction.id}`" :checked="selectedTransactions.includes(
                                     transaction.id
@@ -419,22 +514,90 @@ const exportTransactions = () => {
                                         " />
                             </TableCell>
                             <TableCell>{{ index + 1 }}</TableCell>
+                            <TableCell>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger>{{
+                                            useDateFormat(
+                                                transaction.created_at,
+                                                "DD MMM YYYY",
+                                                {
+                                                    locales: clientLocale,
+                                                }
+                                            )
+                                        }}</TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>{{
+                                                useDateFormat(
+                                                    transaction.created_at,
+                                                    "HH:MM:ss, DD MMM YYYY",
+                                                    {
+                                                        locales: clientLocale,
+                                                    }
+                                                )
+                                            }}</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            </TableCell>
+                            <TableCell>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger>{{
+                                            useDateFormat(
+                                                transaction.transfer_date,
+                                                "DD MMM YYYY",
+                                                {
+                                                    locales: clientLocale,
+                                                }
+                                            )
+                                        }}</TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>{{
+                                                useDateFormat(
+                                                    transaction.transfer_date,
+                                                    "HH:MM:ss, DD MMM YYYY",
+                                                    {
+                                                        locales: clientLocale,
+                                                    }
+                                                )
+                                            }}</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            </TableCell>
                             <TableCell>{{ transaction.duta }}</TableCell>
                             <TableCell>{{ transaction.donatur }}</TableCell>
-                            <TableCell>{{
-                                useDateFormat(
-                                    transaction.transfer_date,
-                                    "HH:mm, DD MMM YYYY",
-                                    {
-                                        locales: clientLocale,
-                                    }
-                                )
-                            }}</TableCell>
-                            <TableCell>{{
-                                formatCurrency(transaction.nominal)
-                                }}</TableCell>
                             <TableCell>{{ transaction.metode }}</TableCell>
                             <TableCell>{{ transaction.jenis }}</TableCell>
+                            <TableCell>{{
+                                formatNumber(transaction.nominal)
+                            }}</TableCell>
+                            <TableCell>{{
+                                formatNumber(transaction.nominal * 0.2)
+                            }}</TableCell>
+                            <TableCell>{{
+                                formatNumber(transaction.nominal - (transaction.nominal * 0.2))
+                            }}</TableCell>
+                            <TableCell>{{
+                                formatNumber((transaction.nominal - (transaction.nominal * 0.2)) * 0.5)
+                            }}</TableCell>
+                            <TableCell>{{
+                                formatNumber((transaction.nominal - (transaction.nominal * 0.2)) - ((transaction.nominal
+                                    - (transaction.nominal * 0.2)) * 0.5))
+                            }}</TableCell>
+                            <TableCell>{{
+                                formatNumber(((transaction.nominal - (transaction.nominal * 0.2)) -
+                                    ((transaction.nominal
+                                        - (transaction.nominal * 0.2)) * 0.5)) * 0.2)
+                            }}</TableCell>
+                            <TableCell>{{
+                                formatNumber((transaction.nominal - (transaction.nominal * 0.2)) - ((transaction.nominal
+                                    - (transaction.nominal * 0.2)) * 0.5) - (((transaction.nominal - (transaction.nominal *
+                                        0.2)) -
+                                        ((transaction.nominal
+                                            - (transaction.nominal * 0.2)) * 0.5)) * 0.2))
+                            }}</TableCell>
                             <TableCell class="p-3">
                                 <DropdownMenu>
                                     <DropdownMenuTrigger as-child>

@@ -33,10 +33,13 @@ Route::get('/', function () {
     switch ($user->role) {
         case 'admin':
             return redirect()->route('admin.dashboard');
+            // return Inertia::render('Admin/Dashboard', ['user' => $user]);
         case 'pengurus':
             return redirect()->route('pengurus.dashboard');
+            // return Inertia::render('Pengurus/Dashboard', ['user' => $user]);
         case 'duta':
             return redirect()->route('duta.dashboard');
+            // return Inertia::render('Duta/Dashboard', ['user' => $user]);
         default:
             return redirect()->route('login');
     }
@@ -44,15 +47,25 @@ Route::get('/', function () {
 
 Route::middleware(['auth', 'role:admin'])->prefix('ad')->group(function () {
     Route::get('/dashboard', function () {
-        return Inertia::render('Admin/Dashboard');
+        $user = Auth::user();
+        return Inertia::render('Admin/Dashboard', ['user' => $user]);
     })->name('admin.dashboard');
 
-    Route::resource('users', AdminUserController::class);
+    Route::resource('users', AdminUserController::class)->names([
+        'index' => 'admin.users.index',
+        'create' => 'admin.users.create',
+        'store' => 'admin.users.store',
+        'show' => 'admin.users.show',
+        'edit' => 'admin.users.edit',
+        'update' => 'admin.users.update',
+        'destroy' => 'admin.users.destroy',
+    ]);
 });
 
 Route::middleware(['auth', 'role:pengurus'])->prefix('pe')->group(function () {
     Route::get('/dashboard', function () {
-        return Inertia::render('Pengurus/Dashboard');
+        $user = Auth::user();
+        return Inertia::render('Pengurus/Dashboard', ['user' => $user]);
     })->name('pengurus.dashboard');
 
     Route::resource('transactions', PengurusTransactionController::class)->names([
@@ -78,28 +91,15 @@ Route::middleware(['auth', 'role:pengurus'])->prefix('pe')->group(function () {
 
 Route::middleware(['auth', 'role:duta'])->prefix('du')->group(function () {
     Route::get('/dashboard', function () {
-        return Inertia::render('Duta/Dashboard');
+        $user = Auth::user();
+        return Inertia::render('Duta/Dashboard', ['user' => $user]);
     })->name('duta.dashboard');
 
-    Route::resource('transactions', DutaTransactionController::class)->names([
-        'index' => 'duta.transactions.index',
-        // 'create' => 'duta.transactions.create',
-        // 'store' => 'duta.transactions.store',
-        // 'show' => 'duta.transactions.show',
-        // 'edit' => 'duta.transactions.edit',
-        // 'update' => 'duta.transactions.update',
-        // 'destroy' => 'duta.transactions.destroy',
-    ]);
-
-    Route::resource('beneficiaries', DutaBeneficiaryController::class)->names([
-        'index' => 'duta.beneficiaries.index',
-        // 'create' => 'duta.beneficiaries.create',
-        // 'store' => 'duta.beneficiaries.store',
-        // 'show' => 'duta.beneficiaries.show',
-        // 'edit' => 'duta.beneficiaries.edit',
-        // 'update' => 'duta.beneficiaries.update',
-        // 'destroy' => 'duta.beneficiaries.destroy',
-    ]);
+    Route::get('transactions', [DutaTransactionController::class, 'index'])->name('duta.transactions.index');
+    Route::get('transactions/create', [DutaTransactionController::class, 'create'])->name('duta.transactions.create');
+    Route::post('transactions/store', [DutaTransactionController::class, 'store'])->name('duta.transactions.store');
+    Route::get('beneficiaries', [DutaBeneficiaryController::class, 'index'])->name('duta.beneficiaries.index');
+    Route::get('beneficiaries/{beneficiary}', [DutaBeneficiaryController::class, 'show'])->name('duta.beneficiaries.show');
 });
 
 Route::middleware('auth')->group(function () {

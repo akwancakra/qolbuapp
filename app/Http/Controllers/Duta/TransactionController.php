@@ -20,6 +20,22 @@ class TransactionController extends Controller
     }
 
     /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        return Inertia::render('Pengurus/Transaction/Create');
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(StoreTransactionRequest $request)
+    {
+        //
+    }
+
+    /**
      * Display a listing of the resource.
      */
     public function index()
@@ -32,9 +48,9 @@ class TransactionController extends Controller
                 'nominal' => '100000',
                 'metode' => 'Bank Transfer',
                 'jenis' => 'Donation',
-                'transferred_at' => '2022-01-30T00:00:00.318509Z',
-                'created_at' => '2022-01-30T00:27:49.318509Z',
-                'updated_at' => '2022-01-30T00:27:49.318509Z',
+                'transfer_date' => '2022-01-30T00:00:00.318509Z',
+                'created_at' => '2022-01-29T00:27:49.318509Z',
+                'updated_at' => '2022-01-29T00:27:49.318509Z',
             ],
             [
                 'id' => 2,
@@ -43,7 +59,7 @@ class TransactionController extends Controller
                 'nominal' => '200000',
                 'metode' => 'Credit Card',
                 'jenis' => 'Donation',
-                'transferred_at' => $this->generateRandomUTCDate(),
+                'transfer_date' => $this->generateRandomUTCDate(),
                 'created_at' => $this->generateRandomUTCDate(),
                 'updated_at' => $this->generateRandomUTCDate(),
             ],
@@ -54,7 +70,7 @@ class TransactionController extends Controller
                 'nominal' => '300000',
                 'metode' => 'Bank Transfer',
                 'jenis' => 'Donation',
-                'transferred_at' => $this->generateRandomUTCDate(),
+                'transfer_date' => $this->generateRandomUTCDate(),
                 'created_at' => $this->generateRandomUTCDate(),
                 'updated_at' => $this->generateRandomUTCDate(),
             ],
@@ -65,7 +81,7 @@ class TransactionController extends Controller
                 'nominal' => '400000',
                 'metode' => 'Credit Card',
                 'jenis' => 'Donation',
-                'transferred_at' => $this->generateRandomUTCDate(),
+                'transfer_date' => $this->generateRandomUTCDate(),
                 'created_at' => $this->generateRandomUTCDate(),
                 'updated_at' => $this->generateRandomUTCDate(),
             ],
@@ -76,7 +92,7 @@ class TransactionController extends Controller
                 'nominal' => '500000',
                 'metode' => 'Bank Transfer',
                 'jenis' => 'Donation',
-                'transferred_at' => $this->generateRandomUTCDate(),
+                'transfer_date' => $this->generateRandomUTCDate(),
                 'created_at' => $this->generateRandomUTCDate(),
                 'updated_at' => $this->generateRandomUTCDate(),
             ],
@@ -87,7 +103,7 @@ class TransactionController extends Controller
                 'nominal' => '600000',
                 'metode' => 'Credit Card',
                 'jenis' => 'Donation',
-                'transferred_at' => $this->generateRandomUTCDate(),
+                'transfer_date' => $this->generateRandomUTCDate(),
                 'created_at' => $this->generateRandomUTCDate(),
                 'updated_at' => $this->generateRandomUTCDate(),
             ],
@@ -98,7 +114,7 @@ class TransactionController extends Controller
                 'nominal' => '700000',
                 'metode' => 'Bank Transfer',
                 'jenis' => 'Donation',
-                'transferred_at' => $this->generateRandomUTCDate(),
+                'transfer_date' => $this->generateRandomUTCDate(),
                 'created_at' => $this->generateRandomUTCDate(),
                 'updated_at' => $this->generateRandomUTCDate(),
             ],
@@ -109,7 +125,7 @@ class TransactionController extends Controller
                 'nominal' => '800000',
                 'metode' => 'Credit Card',
                 'jenis' => 'Donation',
-                'transferred_at' => $this->generateRandomUTCDate(),
+                'transfer_date' => $this->generateRandomUTCDate(),
                 'created_at' => $this->generateRandomUTCDate(),
                 'updated_at' => $this->generateRandomUTCDate(),
             ],
@@ -120,7 +136,7 @@ class TransactionController extends Controller
                 'nominal' => '900000',
                 'metode' => 'Bank Transfer',
                 'jenis' => 'Donation',
-                'transferred_at' => $this->generateRandomUTCDate(),
+                'transfer_date' => $this->generateRandomUTCDate(),
                 'created_at' => $this->generateRandomUTCDate(),
                 'updated_at' => $this->generateRandomUTCDate(),
             ],
@@ -131,7 +147,7 @@ class TransactionController extends Controller
                 'nominal' => '1000000',
                 'metode' => 'Credit Card',
                 'jenis' => 'Donation',
-                'transferred_at' => $this->generateRandomUTCDate(),
+                'transfer_date' => $this->generateRandomUTCDate(),
                 'created_at' => $this->generateRandomUTCDate(),
                 'updated_at' => $this->generateRandomUTCDate(),
             ]
@@ -140,55 +156,5 @@ class TransactionController extends Controller
         return Inertia::render('Duta/Transaction/Index', [
             'transactions' => $transactions,
         ]);
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        // return Inertia::render('Duta/Transaction/Create');
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreTransactionRequest $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Transaction $transaction)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Transaction $transaction)
-    {
-        // return Inertia::render('Duta/Transaction/Edit', [
-        //     'transaction' => $transaction,
-        // ]);
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateTransactionRequest $request, Transaction $transaction)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Transaction $transaction)
-    {
-        //
     }
 }

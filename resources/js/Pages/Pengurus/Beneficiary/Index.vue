@@ -121,7 +121,7 @@ const exportTransactions = () => {
 
             <div class="grid gap-3 grid-cols-2 sm:grid-cols-4">
                 <div>
-                    <Label for="name">Cari nama</Label>
+                    <Label for="name">Nama Anak</Label>
                     <Input type="text" id="name" placeholder="Cari nama..." />
                 </div>
                 <div>
@@ -132,12 +132,13 @@ const exportTransactions = () => {
                         </SelectTrigger>
                         <SelectContent>
                             <SelectGroup>
-                                <SelectItem value="age_default">Semua</SelectItem>
-                                <SelectItem value="age_one">4-8 Tahun</SelectItem>
-                                <SelectItem value="age_two">9-11 Tahun</SelectItem>
-                                <SelectItem value="age_three">12-15 Tahun</SelectItem>
-                                <SelectItem value="age_four">16-18 Tahun</SelectItem>
-                                <SelectItem value="age_five">19-21 Tahun</SelectItem>
+                                <SelectItem value="default">Semua</SelectItem>
+                                <SelectItem value="one">4-8 Tahun</SelectItem>
+                                <SelectItem value="two">9-11 Tahun</SelectItem>
+                                <SelectItem value="three">12-15 Tahun</SelectItem>
+                                <SelectItem value="four">16-18 Tahun</SelectItem>
+                                <SelectItem value="five">19-21 Tahun</SelectItem>
+                                <SelectItem value="other">>21 Tahun</SelectItem>
                             </SelectGroup>
                         </SelectContent>
                     </Select>
@@ -150,12 +151,28 @@ const exportTransactions = () => {
                         </SelectTrigger>
                         <SelectContent>
                             <SelectGroup>
-                                <SelectItem value="education_default">Semua</SelectItem>
-                                <SelectItem value="education_tk">TK (Taman Kanak-kanak)</SelectItem>
-                                <SelectItem value="education_sd">SD (Sekolah Dasar)</SelectItem>
-                                <SelectItem value="education_smp">SMP (Sekolah Menengah Pertama)</SelectItem>
-                                <SelectItem value="education_sma">SMA (Sekolah Menengah Atas)</SelectItem>
-                                <SelectItem value="education_university">Universitas</SelectItem>
+                                <SelectItem value="default">Semua</SelectItem>
+                                <SelectItem value="tk">TK (Taman Kanak-kanak)</SelectItem>
+                                <SelectItem value="sd">SD (Sekolah Dasar)</SelectItem>
+                                <SelectItem value="smp">SMP (Sekolah Menengah Pertama)</SelectItem>
+                                <SelectItem value="sma">SMA (Sekolah Menengah Atas)</SelectItem>
+                                <SelectItem value="university">Universitas</SelectItem>
+                            </SelectGroup>
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div>
+                    <Label for="status">Status</Label>
+                    <Select id="status">
+                        <SelectTrigger>
+                            <SelectValue placeholder="Pilih Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectGroup>
+                                <SelectItem value="default">Semua</SelectItem>
+                                <SelectItem value="partherless">Yatim</SelectItem>
+                                <SelectItem value="motherless">Piatu</SelectItem>
+                                <SelectItem value="orphan">Yatim Piatu</SelectItem>
                             </SelectGroup>
                         </SelectContent>
                     </Select>
@@ -247,11 +264,17 @@ const exportTransactions = () => {
                         <TableRow>
                             <TableHead></TableHead>
                             <TableHead>#</TableHead>
-                            <TableHead>Nama</TableHead>
-                            <TableHead>Panggilan</TableHead>
-                            <TableHead>Tgl Lahir</TableHead>
-                            <TableHead>Ayah</TableHead>
-                            <TableHead>Ibu</TableHead>
+                            <TableHead class="min-w-[120px]">NIK</TableHead>
+                            <TableHead class="min-w-[120px]">Nama</TableHead>
+                            <TableHead class="min-w-[120px]">RT/RW</TableHead>
+                            <TableHead class="min-w-[120px]">JK</TableHead>
+                            <TableHead class="min-w-[170px]">TTL</TableHead>
+                            <TableHead>Pendidikan</TableHead>
+                            <TableHead class="min-w-[120px]">Ayah</TableHead>
+                            <TableHead class="min-w-[120px]">Ibu</TableHead>
+                            <TableHead>No. Telp</TableHead>
+                            <TableHead>No. Akte Kematian</TableHead>
+                            <TableHead>Keterangan</TableHead>
                             <TableHead>Aksi</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -263,14 +286,20 @@ const exportTransactions = () => {
                                     @update:checked="(checked) => toggleCheckbox(checked, beneficiary.id)" />
                             </TableCell>
                             <TableCell>{{ index + 1 }}</TableCell>
+                            <TableCell>317219138129</TableCell>
                             <TableCell>{{ beneficiary.name }}</TableCell>
-                            <TableCell>{{ beneficiary.nickname }}</TableCell>
-                            <TableCell>{{ useDateFormat(beneficiary.birthdate, 'DD MMM YYYY', {
+                            <TableCell>003/001 Sukup Latest</TableCell>
+                            <TableCell>Laki-laki</TableCell>
+                            <TableCell>Bandung, {{ useDateFormat(beneficiary.birthdate, 'DD MMM YYYY', {
                                 locales:
                                     clientLocale
                             }) }}</TableCell>
+                            <TableCell>SD</TableCell>
                             <TableCell>{{ beneficiary.parent_father }}</TableCell>
                             <TableCell>{{ beneficiary.parent_mother }}</TableCell>
+                            <TableCell>087789892020</TableCell>
+                            <TableCell>AK/29/TOT/KENT</TableCell>
+                            <TableCell>Y-Team</TableCell>
                             <TableCell class="p-3">
                                 <DropdownMenu>
                                     <DropdownMenuTrigger as-child>

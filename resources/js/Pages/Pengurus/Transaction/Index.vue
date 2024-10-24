@@ -102,7 +102,7 @@ const formatDate = (date: Date | null) => {
 
 // ========== SECTION 2 ==========
 // State untuk mengontrol apakah konten utama ditampilkan atau tidak
-const showContentTwo = ref(true);
+const showContentTwo = ref(false);
 
 // Function untuk toggle (show/hide) konten utama
 const toggleContentTwo = () => {
@@ -194,21 +194,22 @@ const exportTransactions = () => {
 
             <div class="grid gap-3 grid-cols-2 md:grid-cols-4">
                 <div>
-                    <Label for="name">Cari nama</Label>
-                    <Input type="text" id="name" placeholder="Cari nama..." />
+                    <Label for="name">Nama Duta</Label>
+                    <Input type="text" id="name" placeholder="Cari nama duta..." />
                 </div>
                 <div>
-                    <Label for="type">Pilih Tim</Label>
+                    <Label for="type">Tim</Label>
                     <Select>
                         <SelectTrigger>
-                            <SelectValue placeholder="Pilih Waktu" />
+                            <SelectValue placeholder="Pilih Tim" />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectGroup>
-                                <SelectItem value="one">Tim 1</SelectItem>
-                                <SelectItem value="two">Tim 2</SelectItem>
-                                <SelectItem value="three">Tim 3</SelectItem>
-                                <SelectItem value="four">Tim 4</SelectItem>
+                                <SelectItem value="default">Semua</SelectItem>
+                                <SelectItem value="one">Tim 99</SelectItem>
+                                <SelectItem value="two">Tim 98</SelectItem>
+                                <SelectItem value="three">Tim 97</SelectItem>
+                                <SelectItem value="four">Tim 96</SelectItem>
                             </SelectGroup>
                         </SelectContent>
                     </Select>
@@ -221,6 +222,7 @@ const exportTransactions = () => {
                         </SelectTrigger>
                         <SelectContent>
                             <SelectGroup>
+                                <SelectItem value="default">Default (Per-bulan)</SelectItem>
                                 <SelectItem value="weekly">Per-minggu</SelectItem>
                                 <SelectItem value="monthly">Per-bulan</SelectItem>
                                 <SelectItem value="yearly">Per-tahun</SelectItem>
@@ -572,16 +574,16 @@ const exportTransactions = () => {
                             <TableCell>{{ transaction.jenis }}</TableCell>
                             <TableCell>{{
                                 formatNumber(transaction.nominal)
-                            }}</TableCell>
+                                }}</TableCell>
                             <TableCell>{{
                                 formatNumber(transaction.nominal * 0.2)
-                            }}</TableCell>
+                                }}</TableCell>
                             <TableCell>{{
                                 formatNumber(transaction.nominal - (transaction.nominal * 0.2))
-                            }}</TableCell>
+                                }}</TableCell>
                             <TableCell>{{
                                 formatNumber((transaction.nominal - (transaction.nominal * 0.2)) * 0.5)
-                            }}</TableCell>
+                                }}</TableCell>
                             <TableCell>{{
                                 formatNumber((transaction.nominal - (transaction.nominal * 0.2)) - ((transaction.nominal
                                     - (transaction.nominal * 0.2)) * 0.5))

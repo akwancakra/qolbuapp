@@ -46,7 +46,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from '@/Components/ui/alert-dialog';
-import { DownloadIcon, EllipsisIcon, FilePlusIcon, FileTextIcon, ImageIcon, PencilIcon, SheetIcon, Trash2Icon } from 'lucide-vue-next';
+import { BookUserIcon, DownloadIcon, EllipsisIcon, FilePlusIcon, FileTextIcon, ImageIcon, PencilIcon, SheetIcon, Trash2Icon } from 'lucide-vue-next';
 import { Checkbox } from '@/Components/ui/checkbox';
 import { useDateFormat } from '@vueuse/core';
 // LOCAL CODE
@@ -71,18 +71,6 @@ const toggleCheckbox = (checked: boolean, id: number) => {
     } else {
         selectedBeneficiaries.value = selectedBeneficiaries.value.filter(userId => userId !== id);
     }
-};
-
-const deleteBeneficiary = (id: number) => {
-    console.log("Delete beneficiary with id: " + id);
-};
-
-// Function untuk menghapus user yang dipilih
-const deleteSelectedBeneficiaries = () => {
-    console.log("Delete beneficiaries with ids: " + selectedBeneficiaries.value.join(", "));
-    // Implement the actual deletion logic here
-    // After deletion, clear the selection
-    selectedBeneficiaries.value = [];
 };
 
 // Function untuk export beneficiaries
@@ -121,7 +109,7 @@ const exportTransactions = () => {
 
             <div class="grid gap-3 grid-cols-2 sm:grid-cols-4">
                 <div>
-                    <Label for="name">Cari nama</Label>
+                    <Label for="name">Nama Anak</Label>
                     <Input type="text" id="name" placeholder="Cari nama..." />
                 </div>
                 <div>
@@ -132,12 +120,13 @@ const exportTransactions = () => {
                         </SelectTrigger>
                         <SelectContent>
                             <SelectGroup>
-                                <SelectItem value="age_default">Semua</SelectItem>
-                                <SelectItem value="age_one">4-8 Tahun</SelectItem>
-                                <SelectItem value="age_two">9-11 Tahun</SelectItem>
-                                <SelectItem value="age_three">12-15 Tahun</SelectItem>
-                                <SelectItem value="age_four">16-18 Tahun</SelectItem>
-                                <SelectItem value="age_five">19-21 Tahun</SelectItem>
+                                <SelectItem value="default">Semua</SelectItem>
+                                <SelectItem value="one">4-8 Tahun</SelectItem>
+                                <SelectItem value="two">9-11 Tahun</SelectItem>
+                                <SelectItem value="three">12-15 Tahun</SelectItem>
+                                <SelectItem value="four">16-18 Tahun</SelectItem>
+                                <SelectItem value="five">19-21 Tahun</SelectItem>
+                                <SelectItem value="other">>21 Tahun</SelectItem>
                             </SelectGroup>
                         </SelectContent>
                     </Select>
@@ -150,12 +139,28 @@ const exportTransactions = () => {
                         </SelectTrigger>
                         <SelectContent>
                             <SelectGroup>
-                                <SelectItem value="education_default">Semua</SelectItem>
-                                <SelectItem value="education_tk">TK (Taman Kanak-kanak)</SelectItem>
-                                <SelectItem value="education_sd">SD (Sekolah Dasar)</SelectItem>
-                                <SelectItem value="education_smp">SMP (Sekolah Menengah Pertama)</SelectItem>
-                                <SelectItem value="education_sma">SMA (Sekolah Menengah Atas)</SelectItem>
-                                <SelectItem value="education_university">Universitas</SelectItem>
+                                <SelectItem value="default">Semua</SelectItem>
+                                <SelectItem value="tk">TK (Taman Kanak-kanak)</SelectItem>
+                                <SelectItem value="sd">SD (Sekolah Dasar)</SelectItem>
+                                <SelectItem value="smp">SMP (Sekolah Menengah Pertama)</SelectItem>
+                                <SelectItem value="sma">SMA (Sekolah Menengah Atas)</SelectItem>
+                                <SelectItem value="university">Universitas</SelectItem>
+                            </SelectGroup>
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div>
+                    <Label for="status">Status</Label>
+                    <Select id="status">
+                        <SelectTrigger>
+                            <SelectValue placeholder="Pilih Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectGroup>
+                                <SelectItem value="default">Semua</SelectItem>
+                                <SelectItem value="partherless">Yatim</SelectItem>
+                                <SelectItem value="motherless">Piatu</SelectItem>
+                                <SelectItem value="orphan">Yatim Piatu</SelectItem>
                             </SelectGroup>
                         </SelectContent>
                     </Select>
@@ -176,14 +181,23 @@ const exportTransactions = () => {
                     <DropdownMenu>
                         <DropdownMenuTrigger as-child>
                             <Button variant="outline" class="gap-2">
-                                <p>Menu</p>
-                                <EllipsisIcon :size="18" />
+                                <p>Export Data</p>
+                                <!-- <EllipsisIcon :size="18" /> -->
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Aksi menu</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuGroup>
+                            <DropdownMenuItem class="cursor-pointer gap-1" @click="exportTransactions">
+                                <FileTextIcon :size="18" /> Export PDF
+                            </DropdownMenuItem>
+                            <DropdownMenuItem class="cursor-pointer gap-1" @click="exportTransactions">
+                                <SheetIcon :size="18" /> Export Excel
+                            </DropdownMenuItem>
+                            <DropdownMenuItem class="cursor-pointer gap-1" @click="exportTransactions">
+                                <ImageIcon :size="18" />Export JPG
+                            </DropdownMenuItem>
+                            <!-- <DropdownMenuGroup>
                                 <DropdownMenuSub>
                                     <DropdownMenuSubTrigger class="gap-1">
                                         <DownloadIcon :size="18" />
@@ -203,7 +217,7 @@ const exportTransactions = () => {
                                         </DropdownMenuSubContent>
                                     </DropdownMenuPortal>
                                 </DropdownMenuSub>
-                            </DropdownMenuGroup>
+                            </DropdownMenuGroup> -->
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
@@ -216,12 +230,18 @@ const exportTransactions = () => {
                         <TableRow>
                             <TableHead></TableHead>
                             <TableHead>#</TableHead>
-                            <TableHead>Nama</TableHead>
-                            <TableHead>Panggilan</TableHead>
-                            <TableHead>Tgl Lahir</TableHead>
-                            <TableHead>Ayah</TableHead>
-                            <TableHead>Ibu</TableHead>
-                            <!-- <TableHead>Aksi</TableHead> -->
+                            <TableHead class="min-w-[120px]">NIK</TableHead>
+                            <TableHead class="min-w-[120px]">Nama</TableHead>
+                            <TableHead class="min-w-[120px]">RT/RW</TableHead>
+                            <TableHead class="min-w-[120px]">JK</TableHead>
+                            <TableHead class="min-w-[170px]">TTL</TableHead>
+                            <TableHead>Pendidikan</TableHead>
+                            <TableHead class="min-w-[120px]">Ayah</TableHead>
+                            <TableHead class="min-w-[120px]">Ibu</TableHead>
+                            <TableHead>No. Telp</TableHead>
+                            <TableHead>No. Akte Kematian</TableHead>
+                            <TableHead>Keterangan</TableHead>
+                            <TableHead>Aksi</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -232,16 +252,27 @@ const exportTransactions = () => {
                                     @update:checked="(checked) => toggleCheckbox(checked, beneficiary.id)" />
                             </TableCell>
                             <TableCell>{{ index + 1 }}</TableCell>
+                            <TableCell>317219138129</TableCell>
                             <TableCell>{{ beneficiary.name }}</TableCell>
-                            <TableCell>{{ beneficiary.nickname }}</TableCell>
-                            <TableCell>{{ useDateFormat(beneficiary.birthdate, 'DD MMM YYYY', {
+                            <TableCell>003/001 Sukup Latest</TableCell>
+                            <TableCell>Laki-laki</TableCell>
+                            <TableCell>Bandung, {{ useDateFormat(beneficiary.birthdate, 'DD MMM YYYY', {
                                 locales:
                                     clientLocale
                             }) }}</TableCell>
+                            <TableCell>SD</TableCell>
                             <TableCell>{{ beneficiary.parent_father }}</TableCell>
                             <TableCell>{{ beneficiary.parent_mother }}</TableCell>
-                            <!-- <TableCell class="p-3">
-                                <DropdownMenu>
+                            <TableCell>087789892020</TableCell>
+                            <TableCell>AK/29/TOT/KENT</TableCell>
+                            <TableCell>Y-Team</TableCell>
+                            <TableCell class="p-3">
+                                <Link :href="route('duta.beneficiaries.show', beneficiary.id)">
+                                <Button size="icon" variant="outline">
+                                    <BookUserIcon :size="18" />
+                                </Button>
+                                </Link>
+                                <!-- <DropdownMenu>
                                     <DropdownMenuTrigger as-child>
                                         <Button size="icon" variant="outline">
                                             <EllipsisIcon :size="18" />
@@ -251,42 +282,14 @@ const exportTransactions = () => {
                                         <DropdownMenuLabel>Aksi</DropdownMenuLabel>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem as-child>
-                                            <Link :href="route('beneficiaries.edit', beneficiary.id)"
+                                            <Link :href="route('pengurus.beneficiaries.show', beneficiary.id)"
                                                 class="cursor-pointer flex gap-1">
-                                            <PencilIcon :size="18" /> Ubah
+                                            <BookUserIcon :size="18" /> Detail
                                             </Link>
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem as-child>
-                                            <AlertDialog>
-                                                <AlertDialogTrigger
-                                                    class="flex items-center gap-1.5 text-sm px-1.5 py-1 w-full rounded text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-800 dark:hovere:bg-red-700 dark:text-red-200">
-                                                    <Trash2Icon :size="18" />Hapus
-                                                </AlertDialogTrigger>
-                                                <AlertDialogContent class="p-4">
-                                                    <AlertDialogHeader>
-                                                        <AlertDialogTitle>Apakah anda yakin?</AlertDialogTitle>
-                                                        <AlertDialogDescription>
-                                                            This action cannot be undone. This will permanently delete
-                                                            your
-                                                            account
-                                                            and remove your data from our servers.
-                                                        </AlertDialogDescription>
-                                                    </AlertDialogHeader>
-                                                    <AlertDialogFooter>
-                                                        <AlertDialogCancel>Batal</AlertDialogCancel>
-                                                        <AlertDialogAction as-child>
-                                                            <Button variant="destructive"
-                                                                class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                                                @click="deleteBeneficiary(beneficiary.id)">Ya,
-                                                                Hapus</Button>
-                                                        </AlertDialogAction>
-                                                    </AlertDialogFooter>
-                                                </AlertDialogContent>
-                                            </AlertDialog>
-                                        </DropdownMenuItem>
                                     </DropdownMenuContent>
-                                </DropdownMenu>
-                            </TableCell> -->
+                                </DropdownMenu> -->
+                            </TableCell>
                         </TableRow>
                     </TableBody>
                 </Table>

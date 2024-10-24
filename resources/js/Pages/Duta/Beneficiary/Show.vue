@@ -31,7 +31,7 @@ const clientLocale = ref(navigator.language || 'en-US');
         </template>
 
         <Button class="mb-3" variant="outline">
-            <Link :href="route('pengurus.beneficiaries.index')" class="flex gap-1">
+            <Link :href="route('duta.beneficiaries.index')" class="flex gap-1">
             <CornerUpLeftIcon :size="18" /> Kembali
             </Link>
         </Button>

@@ -1,6 +1,12 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3'
+import { Head, Link } from '@inertiajs/vue3'
 import DashboardLayout from '@/Layouts/DashboardLayout.vue'
+import { User } from '@/types';
+import { HeartHandshakeIcon, ReceiptTextIcon, SquareUserIcon } from 'lucide-vue-next';
+
+const props = defineProps<{
+    user: User;
+}>();
 
 </script>
 
@@ -17,11 +23,29 @@ import DashboardLayout from '@/Layouts/DashboardLayout.vue'
 
         <section class="bg-white p-3 rounded-lg mb-3 dark:bg-neutral-800">
             <div class="mb-3">
-                <p class="font-semibold text-2xl tracking-tight">Dashboard Pengurus</p>
+                <p class="font-semibold text-2xl tracking-tight">Selamat Datang, {{ props?.user?.name ?? 'Kamu' }}</p>
                 <p class="text-sm text-neutral-500">Lorem ipsum, dolor sit amet consectetur adipisicing elit. Eveniet
                     veniam,
                     vero omnis dolores temporibus sed?</p>
             </div>
+        </section>
+
+        <section class="grid grid-cols-1 gap-2 sm:grid-cols-3">
+            <Link :href="route('pengurus.transactions.index')"
+                class="bg-white border border-neutral-300 rounded-lg p-3 hover:border-green-500 dark:bg-neutral-800 dark:border-neutral-600 dark:hover:border-green-600">
+            <ReceiptTextIcon :size="32" class="mb-3" />
+            <p class="font-semibold tracking-tight text-lg sm:text-xl">Daftar Transferan</p>
+            </Link>
+            <Link :href="route('pengurus.beneficiaries.index')"
+                class="bg-white border border-neutral-300 rounded-lg p-3 hover:border-green-500 dark:bg-neutral-800 dark:border-neutral-600 dark:hover:border-green-600">
+            <HeartHandshakeIcon :size="32" class="mb-3" />
+            <p class="font-semibold tracking-tight text-lg sm:text-xl">Daftar Penerima Manfaat</p>
+            </Link>
+            <Link :href="route('profile.edit')"
+                class="bg-white border border-neutral-300 rounded-lg p-3 hover:border-green-500 dark:bg-neutral-800 dark:border-neutral-600 dark:hover:border-green-600">
+            <SquareUserIcon :size="32" class="mb-3" />
+            <p class="font-semibold tracking-tight text-lg sm:text-xl">Profile</p>
+            </Link>
         </section>
     </DashboardLayout>
 </template>

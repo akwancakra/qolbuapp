@@ -77,9 +77,9 @@ const toggleSidebar = () => {
 // Menu items
 const menuItems = ref([
     { name: 'Dasbor', icon: HomeIcon, href: route('dashboard'), roles: ['admin', 'pengurus', 'duta'], prefix: 'dashboard' },
-    { name: 'Transaksi', icon: ReceiptTextIcon, href: user.value.role === 'pengurus' ? route('pengurus.transactions.index') : route('duta.transactions.index'), roles: ['pengurus', 'duta'], prefix: 'transactions' },
+    { name: 'Transferan', icon: ReceiptTextIcon, href: user.value.role === 'pengurus' ? route('pengurus.transactions.index') : route('duta.transactions.index'), roles: ['pengurus', 'duta'], prefix: 'transactions' },
     { name: 'Penerima Manfaat', icon: HeartHandshakeIcon, href: user.value.role === 'pengurus' ? route('pengurus.beneficiaries.index') : route('duta.beneficiaries.index'), roles: ['pengurus', 'duta'], prefix: 'beneficiaries' },
-    { name: 'Akun', icon: UsersIcon, href: route('users.index'), roles: ['admin'], prefix: 'users' },
+    { name: 'Akun', icon: UsersIcon, href: route('admin.users.index'), roles: ['admin'], prefix: 'users' },
     { name: 'Profil', icon: SquareUserIcon, href: route('profile.edit'), roles: ['admin', 'pengurus', 'duta'], prefix: 'profile' },
 ]);
 

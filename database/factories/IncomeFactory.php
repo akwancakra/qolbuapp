@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Ambassador;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,6 +18,7 @@ class IncomeFactory extends Factory
     public function definition(): array
     {
         return [
+            'ambassador_id' => Ambassador::factory(),
             'transfer_date' => $this->faker->date(max:'now'),
             // 'amount' => $this->faker->randomFloat(2, 1000, 100000000000),
             'amount' => $this->faker->numberBetween(1000, 100000000000),

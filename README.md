@@ -1,66 +1,87 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# QolbuApp 🌟
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+**QolbuApp** adalah aplikasi berbasis web yang dirancang untuk mempermudah pengelolaan pendapatan dan data anak yatim secara terpusat dan efisien. Dibuat menggunakan **Laravel** sebagai backend, aplikasi ini memberikan kemudahan dalam manajemen dan pelaporan secara real-time.
 
-## About Laravel
+![QolbuApp Logo](./public/logo.png)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🌈 Fitur Utama
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- **Manajemen Pendapatan**: Kelola dan catat semua pendapatan dengan mudah.
+- **Data Anak Yatim**: Pantau data anak yatim dengan detail lengkap.
+- **Laporan Terpusat**: Dapatkan laporan keuangan dan informasi anak yatim secara menyeluruh dan terstruktur.
+- **Keamanan**: Aplikasi ini dilengkapi dengan otentikasi aman dan kontrol akses untuk menjaga data sensitif.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## 🚀 Instalasi dan Penggunaan
 
-## Learning Laravel
+Berikut adalah langkah-langkah untuk menjalankan **QolbuApp** di lingkungan lokal Anda.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### Persyaratan
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+- **PHP** >= 8.0
+- **Composer**
+- **Node.js** & **NPM**
+- **MySQL** atau database lain yang didukung oleh Laravel
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Langkah-langkah Instalasi
 
-## Laravel Sponsors
+1. **Clone repositori ini**:
+   ```bash
+   git clone https://github.com/username/QolbuApp.git
+   cd QolbuApp
+   ```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+2. **Instal dependensi** menggunakan Composer dan NPM:
+   ```bash
+   composer install
+   npm install
+   npm run dev
+   ```
 
-### Premium Partners
+3. **Konfigurasi lingkungan**:
+   Salin file `.env.example` menjadi `.env` dan perbarui pengaturan database Anda.
+   ```bash
+   cp .env.example .env
+   ```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+4. **Generate key aplikasi**:
+   ```bash
+   php artisan key:generate
+   ```
 
-## Contributing
+5. **Migrasi dan Seed database**:
+   Buat tabel dan isi data dasar di database dengan menjalankan:
+   ```bash
+   php artisan migrate --seed
+   ```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+6. **Jalankan server lokal**:
+   ```bash
+   php artisan serve
+   ```
 
-## Code of Conduct
+7. Akses aplikasi di [http://localhost:8000](http://localhost:8000).
+## 🧪 Testing
+Untuk menjalankan pengujian, gunakan perintah berikut:
+```bash
+php artisan test
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## 🔧 Pengaturan Tambahan
+- **Storage Link**: Pastikan untuk membuat symlink storage jika diperlukan.
+  ```bash
+  php artisan storage:link
+  ```
 
-## Security Vulnerabilities
+- **Caching**: Anda dapat mengoptimalkan performa dengan menggunakan perintah berikut:
+  ```bash
+  php artisan config:cache
+  php artisan route:cache
+  php artisan view:cache
+  ```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## 📜 Lisensi
+Proyek ini dilisensikan di bawah lisensi MIT. Lihat [LICENSE](LICENSE) untuk informasi lebih lanjut.
 
-## License
+---
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Terima kasih telah menggunakan **QolbuApp**! Semoga aplikasi ini bermanfaat bagi Anda dan dapat membantu dalam mempermudah pengelolaan data anak yatim dan pendapatan.

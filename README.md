@@ -60,11 +60,11 @@ Berikut adalah langkah-langkah untuk menjalankan **QolbuApp** di lingkungan loka
    ```
 
 7. Akses aplikasi di [http://localhost:8000](http://localhost:8000).
-## 🧪 Testing
-Untuk menjalankan pengujian, gunakan perintah berikut:
-```bash
-php artisan test
-```
+    ## 🧪 Testing
+    Untuk menjalankan pengujian, gunakan perintah berikut:
+    ```bash
+    php artisan test
+    ```
 
 ## 🔧 Pengaturan Tambahan
 - **Storage Link**: Pastikan untuk membuat symlink storage jika diperlukan.

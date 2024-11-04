@@ -2,7 +2,7 @@
 
 **QolbuApp** adalah aplikasi berbasis web yang dirancang untuk mempermudah pengelolaan pendapatan dan data anak yatim secara terpusat dan efisien. Dibuat menggunakan **Laravel** sebagai backend, aplikasi ini memberikan kemudahan dalam manajemen dan pelaporan secara real-time.
 
-![QolbuApp Logo](./public/logo.png)
+![QolbuApp Logo](https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.qolbuhasanah.org%2Ftentang-kami%2F&psig=AOvVaw2lgxYVVmmAHZe3uXwPHZGY&ust=1730814178677000&source=images&cd=vfe&opi=89978449&ved=0CBQQjRxqFwoTCLD5sLTnwokDFQAAAAAdAAAAABAE)
 
 ## 🌈 Fitur Utama
 

@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('dutas', function (Blueprint $table) {
-            $table->string('id', 15)->primary();
-            $table->string('name', 100);
-            $table->string('code', 8);
-            $table->string('phone_number', 14);
+        Schema::create('ambassadors', function (Blueprint $table) {
+            $table->id();
+            $table->string('name')->unique();
+            $table->string('code')->nullable();
+            $table->string('phone_number')->nullable();
             $table->timestamps();
         });
     }
@@ -25,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('dutas');
+        Schema::dropIfExists('ambassadors');
     }
 };

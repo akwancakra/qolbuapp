@@ -21,8 +21,8 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->call([
-            DutaSeeder::class,
-            TransactionSeeder::class,
+            AmbassadorSeeder::class,
+            IncomeSeeder::class,
             BeneficiarySeeder::class,
             UserSeeder::class,
         ]);

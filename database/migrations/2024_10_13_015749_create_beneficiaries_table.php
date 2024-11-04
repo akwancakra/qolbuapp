@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -12,19 +13,22 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('beneficiaries', function (Blueprint $table) {
-            $table->string('id', 15)->primary();
-            $table->string('name', 100);
+            $table->bigIncrements('nik')->primary();
+            $table->string('name');
+            $table->string('place_of_birth');
             $table->date('date_of_birth');
-            $table->integer('age');
-            $table->string('address', 500);
-            $table->string('father_name', 100);
-            $table->string('mother_name', 100);
-            $table->string('school_level', 15);
-            $table->string('school_name', 100);
-            $table->string('shirt_size', 10);
-            $table->string('shoe_size', 10);
+            $table->char('gender', 1);
+            $table->string('neighborhood_unit')->nullable();
+            $table->string('father_name')->nullable();
+            $table->string('mother_name')->nullable();
+            $table->string('education_level')->nullable();
+            $table->string('school_grade')->nullable();
+            $table->string('shirt_size')->nullable();
+            $table->string('shoe_size')->nullable();
             $table->timestamps();
         });
+
+        DB::statement("ALTER TABLE `users` AUTO_INCREMENT = 1000000000000000;");
     }
 
     /**

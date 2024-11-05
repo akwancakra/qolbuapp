@@ -19,8 +19,8 @@ return new class extends Migration
             $table->date('date_of_birth');
             $table->char('gender', 1);
             $table->string('neighborhood_unit')->nullable();
-            $table->string('father_name')->nullable();
-            $table->string('mother_name')->nullable();
+            $table->string('father')->nullable();
+            $table->string('mother')->nullable();
             $table->string('education_level')->nullable();
             $table->string('school_grade')->nullable();
             $table->string('shirt_size')->nullable();

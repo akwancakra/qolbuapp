@@ -20,8 +20,8 @@ return new class extends Migration
             $table->decimal('amount', 19, 2);
             $table->string('donor');
             $table->string('team')->nullable();
-            $table->string('payment_method');
-            $table->string('type');
+            $table->string('payment_method')->default('Transfer Bank');
+            $table->string('type')->default('Donasi');
             $table->timestamps();
         });
     }

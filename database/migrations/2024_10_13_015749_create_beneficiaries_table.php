@@ -25,6 +25,7 @@ return new class extends Migration
             $table->string('school_grade')->nullable();
             $table->string('shirt_size')->nullable();
             $table->integer('shoe_size')->nullable();
+            $table->string('description')->nullable();
             $table->timestamps();
         });
 

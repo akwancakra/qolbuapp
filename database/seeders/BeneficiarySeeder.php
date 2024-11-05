@@ -24,6 +24,8 @@ class BeneficiarySeeder extends Seeder
                 'school_grade' => '1',
                 'shirt_size' => 'M',
                 'shoe_size' => '36',
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
                 'nik' => '3201020202020002',
@@ -38,6 +40,8 @@ class BeneficiarySeeder extends Seeder
                 'school_grade' => '2',
                 'shirt_size' => 'L',
                 'shoe_size' => '37',
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
                 'nik' => '3201030303030003',
@@ -52,6 +56,8 @@ class BeneficiarySeeder extends Seeder
                 'school_grade' => '3',
                 'shirt_size' => 'M',
                 'shoe_size' => '38',
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
                 'nik' => '3201040404040004',
@@ -66,6 +72,8 @@ class BeneficiarySeeder extends Seeder
                 'school_grade' => '4',
                 'shirt_size' => 'S',
                 'shoe_size' => '35',
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
                 'nik' => '3201101010100010',
@@ -80,6 +88,8 @@ class BeneficiarySeeder extends Seeder
                 'school_grade' => '1',
                 'shirt_size' => 'XS',
                 'shoe_size' => '34',
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
         ]);
     }

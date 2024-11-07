@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('incomes', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(Ambassador::class);
+            $table->foreignIdFor(Ambassador::class)->nullable()->constrained()->cascadeOnUpdate()->nullOnDelete();
             $table->date('transfer_date');
             $table->decimal('amount', 19, 2);
             $table->string('donor');

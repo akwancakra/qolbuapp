@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('team')->nullable();
             $table->string('payment_method')->default('Transfer Bank');
             $table->string('type')->default('Donasi');
+            $table->string('on_behalf_of')->nullable();
             $table->timestamps();
         });
     }

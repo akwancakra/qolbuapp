@@ -14,8 +14,8 @@ class BeneficiaryFactory extends Factory
         return [
             'nik' => $this->faker->unique()->numerify('################'),
             'name' => $this->faker->name(),
-            'place_of_birth' => $this->faker->city(),
-            'date_of_birth' => $this->faker->date(),
+            'birth_pace' => $this->faker->city(),
+            'birth_date' => $this->faker->date(),
             'gender' => $this->faker->randomElement(['L', 'P']),
             'neighborhood_unit' => $this->faker->address(),
             'father_name' => $this->faker->name(),

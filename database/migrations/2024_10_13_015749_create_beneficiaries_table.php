@@ -15,8 +15,8 @@ return new class extends Migration
         Schema::create('beneficiaries', function (Blueprint $table) {
             $table->bigIncrements('nik')->primary();
             $table->string('name');
-            $table->string('place_of_birth');
-            $table->date('date_of_birth');
+            $table->string('birth_place');
+            $table->date('birth_date');
             $table->char('gender', 1);
             $table->string('neighborhood_unit')->nullable();
             $table->string('father')->nullable();

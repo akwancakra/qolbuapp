@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Member;
+namespace App\Http\Controllers\BoardMember;
 
 use App\Http\Controllers\Controller;
 use App\Models\Ambassador;
@@ -14,7 +14,7 @@ class IncomeController extends Controller
      */
     public function index()
     {
-        return view('member.incomes.index');
+        return view('board_member.incomes.index');
     }
 
     /**
@@ -22,7 +22,7 @@ class IncomeController extends Controller
      */
     public function create()
     {
-        return view('member.incomes.create');
+        return view('board_member.incomes.create');
     }
 
     /**
@@ -54,7 +54,7 @@ class IncomeController extends Controller
             'on_behalf_of' => $request->on_behalf_of,
         ]);
 
-        return redirect()->route('member.incomes.index');
+        return redirect()->route('board_member.incomes.index');
     }
 
     /**
@@ -62,7 +62,7 @@ class IncomeController extends Controller
      */
     public function edit(Income $income)
     {
-        return view('member.incomes.edit', [
+        return view('board_member.incomes.edit', [
             'income' => $income
         ]);
     }
@@ -96,7 +96,7 @@ class IncomeController extends Controller
             'on_behalf_of' => $request->on_behalf_of,
         ]);
 
-        return redirect()->route('member.incomes.index');
+        return redirect()->route('board_member.incomes.index');
     }
 
     /**
@@ -106,6 +106,6 @@ class IncomeController extends Controller
     {
         $income->delete();
 
-        return redirect()->route('member.incomes.index');
+        return redirect()->route('board_member.incomes.index');
     }
 }

@@ -6,6 +6,10 @@ use App\Http\Controllers\Duta\BeneficiaryController as DutaBeneficiaryController
 use App\Http\Controllers\Duta\TransactionController as DutaTransactionController;
 use App\Http\Controllers\Pengurus\BeneficiaryController as PengurusBeneficiaryController;
 use App\Http\Controllers\Pengurus\TransactionController as PengurusTransactionController;
+use App\Http\Controllers\BoardMember\BeneficiaryController as BoardMemberBeneficiaryController;
+use App\Http\Controllers\BoardMember\IncomeController as BoardMemberIncomeController;
+use App\Http\Controllers\Ambassador\BeneficiaryController as AmbassadorBeneficiaryController;
+use App\Http\Controllers\Ambassador\IncomeController as AmbassadorIncomeController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -35,9 +39,11 @@ Route::get('/', function () {
             return redirect()->route('admin.dashboard');
             // return Inertia::render('Admin/Dashboard', ['user' => $user]);
         case 'pengurus':
+            // return redirect()->route('board_member.dashboard');
             return redirect()->route('pengurus.dashboard');
             // return Inertia::render('Pengurus/Dashboard', ['user' => $user]);
         case 'duta':
+            // return redirect()->route('ambassador.dashboard');
             return redirect()->route('duta.dashboard');
             // return Inertia::render('Duta/Dashboard', ['user' => $user]);
         default:
@@ -101,6 +107,58 @@ Route::middleware(['auth', 'role:duta'])->prefix('du')->group(function () {
     Route::get('beneficiaries', [DutaBeneficiaryController::class, 'index'])->name('duta.beneficiaries.index');
     Route::get('beneficiaries/{beneficiary}', [DutaBeneficiaryController::class, 'show'])->name('duta.beneficiaries.show');
 });
+
+// By Bill START
+Route::middleware(['auth', 'role:duta'])->prefix('am')->group(function () {
+    Route::get('/dashboard', function () {
+        $user = Auth::user();
+        return Inertia::render('Ambassador/Dashboard', ['user' => $user]);
+    })->name('ambassador.dashboard');
+
+    Route::resource('beneficiaries', AmbassadorBeneficiaryController::class)
+    ->only(['index', 'show'])
+    ->names([
+        'index' => 'ambassador.beneficiaries.index',
+        'show' => 'ambassador.beneficiaries.show',
+    ]);
+
+    Route::resource('incomes', AmbassadorIncomeController::class)
+    ->only(['index', 'create', 'store'])
+    ->names([
+        'index' => 'ambassador.incomes.index',
+        'create' => 'ambassador.incomes.create',
+        'store' => 'ambassador.incomes.store',
+    ]);
+});
+
+Route::middleware(['auth', 'role:pengurus'])->prefix('bm')->group(function () {
+    Route::get('/dashboard', function () {
+        $user = Auth::user();
+        return Inertia::render('BoardMember/Dashboard', ['user' => $user]);
+    })->name('board_member.dashboard');
+
+    Route::resource('beneficiaries', BoardMemberBeneficiaryController::class)->names([
+        'index' => 'board_member.beneficiaries.index',
+        'create' => 'board_member.beneficiaries.create',
+        'store' => 'board_member.beneficiaries.store',
+        'show' => 'board_member.beneficiaries.show',
+        'edit' => 'board_member.beneficiaries.edit',
+        'update' => 'board_member.beneficiaries.update',
+        'destroy' => 'board_member.beneficiaries.destroy',
+    ]);
+
+    Route::resource('incomes', BoardMemberIncomeController::class)
+        ->except('show')
+        ->names([
+            'index' => 'board_member.incomes.index',
+            'create' => 'board_member.incomes.create',
+            'store' => 'board_member.incomes.store',
+            'edit' => 'board_member.incomes.edit',
+            'update' => 'board_member.incomes.update',
+            'destroy' => 'board_member.incomes.destroy',
+        ]);
+});
+// By Bill END
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

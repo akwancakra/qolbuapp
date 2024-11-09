@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Beneficiary;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Inertia\Inertia;
 
 class BeneficiaryController extends Controller
 {
@@ -14,7 +15,9 @@ class BeneficiaryController extends Controller
      */
     public function index()
     {
-        return view('board_member.beneficiaries.index');
+        return Inertia::render('BoardMember/Beneficiaries/Index', [
+            'beneficiaries' => Beneficiary::all()
+        ]);
     }
 
     /**
@@ -22,7 +25,7 @@ class BeneficiaryController extends Controller
      */
     public function create()
     {
-        return view('board_member.beneficiaries.create');
+        return Inertia::render('BoardMember/Beneficiaries/Create');
     }
 
     /**
@@ -49,7 +52,7 @@ class BeneficiaryController extends Controller
             ])
         );
 
-        return redirect('/beneficiaries');
+        return redirect()->route('board_member.beneficiaries.index');
     }
 
     /**
@@ -57,7 +60,7 @@ class BeneficiaryController extends Controller
      */
     public function show(Beneficiary $beneficiary)
     {
-        return view('board_member.beneficiaries.show', [
+        return Inertia::render('BoardMember/Beneficiaries/Show', [
             'beneficiary' => $beneficiary
         ]);
     }
@@ -67,7 +70,7 @@ class BeneficiaryController extends Controller
      */
     public function edit(Beneficiary $beneficiary)
     {
-        return view('board_member.beneficiaries.edit', [
+        return Inertia::render('BoardMember/Beneficiaries/Edit', [
             'beneficiary' => $beneficiary
         ]);
     }

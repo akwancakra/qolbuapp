@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Ambassador;
 use App\Http\Controllers\Controller;
 use App\Models\Beneficiary;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class BeneficiaryController extends Controller
 {
@@ -13,7 +14,9 @@ class BeneficiaryController extends Controller
      */
     public function index()
     {
-        return view('ambassador.beneficiaries.index');
+        return Inertia::render('Ambassador/Beneficiaries/Index', [
+            'beneficiaries' => Beneficiary::all()
+        ]);
     }
 
     /**
@@ -21,7 +24,7 @@ class BeneficiaryController extends Controller
      */
     public function show(Beneficiary $beneficiary)
     {
-        return view('ambassador.beneficiaries.show', [
+        return Inertia::render('Ambassador/Beneficiaries/Show', [
             'beneficiary' => $beneficiary
         ]);
     }

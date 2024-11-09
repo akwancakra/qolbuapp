@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Ambassador;
 use App\Models\Income;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class IncomeController extends Controller
 {
@@ -14,7 +15,9 @@ class IncomeController extends Controller
      */
     public function index()
     {
-        return view('board_member.incomes.index');
+        return Inertia::render('BoardMember/Incomes/Index', [
+            'incomes' => Income::all(),
+        ]);
     }
 
     /**
@@ -22,7 +25,7 @@ class IncomeController extends Controller
      */
     public function create()
     {
-        return view('board_member.incomes.create');
+        return Inertia::render('BoardMember/Incomes/Create');
     }
 
     /**
@@ -62,7 +65,7 @@ class IncomeController extends Controller
      */
     public function edit(Income $income)
     {
-        return view('board_member.incomes.edit', [
+        return Inertia::render('BoardMember/Incomes/Edit', [
             'income' => $income
         ]);
     }

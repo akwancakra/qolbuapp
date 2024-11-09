@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Ambassador;
 
 use App\Http\Controllers\Controller;
+use App\Models\Ambassador;
 use App\Models\Income;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -14,9 +15,10 @@ class IncomeController extends Controller
      */
     public function index()
     {
-        return Inertia::render('Ambassador/Incomes/Index', [
-            'incomes' => Income::all(),
-        ]);
+        $incomes = Income::all();
+        $topTenAmbassadors = Ambassador::topTenByIncome();
+
+        return Inertia::render('Ambassador/Incomes/Index', compact('incomes', 'topTenAmbassadors'));
     }
 
     /**

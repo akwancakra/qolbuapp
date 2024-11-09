@@ -15,9 +15,10 @@ class IncomeController extends Controller
      */
     public function index()
     {
-        return Inertia::render('BoardMember/Incomes/Index', [
-            'incomes' => Income::all(),
-        ]);
+        $incomes = Income::all();
+        $topTenAmbassadors = Ambassador::topTenByIncome();
+
+        return Inertia::render('BoardMember/Incomes/Index', compact('incomes', 'topTenAmbassadors'));
     }
 
     /**
@@ -65,9 +66,7 @@ class IncomeController extends Controller
      */
     public function edit(Income $income)
     {
-        return Inertia::render('BoardMember/Incomes/Edit', [
-            'income' => $income
-        ]);
+        return Inertia::render('BoardMember/Incomes/Edit', compact('income'));
     }
 
     /**

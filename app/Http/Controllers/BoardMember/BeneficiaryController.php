@@ -15,9 +15,9 @@ class BeneficiaryController extends Controller
      */
     public function index()
     {
-        return Inertia::render('BoardMember/Beneficiaries/Index', [
-            'beneficiaries' => Beneficiary::all()
-        ]);
+        $beneficiaries = Beneficiary::all();
+        
+        return Inertia::render('BoardMember/Beneficiaries/Index', compact('beneficiaries'));
     }
 
     /**
@@ -60,9 +60,7 @@ class BeneficiaryController extends Controller
      */
     public function show(Beneficiary $beneficiary)
     {
-        return Inertia::render('BoardMember/Beneficiaries/Show', [
-            'beneficiary' => $beneficiary
-        ]);
+        return Inertia::render('BoardMember/Beneficiaries/Show', compact('beneficiary'));
     }
 
     /**
@@ -70,9 +68,7 @@ class BeneficiaryController extends Controller
      */
     public function edit(Beneficiary $beneficiary)
     {
-        return Inertia::render('BoardMember/Beneficiaries/Edit', [
-            'beneficiary' => $beneficiary
-        ]);
+        return Inertia::render('BoardMember/Beneficiaries/Edit', compact('beneficiary'));
     }
 
     /**

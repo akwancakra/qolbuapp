@@ -26,6 +26,7 @@ class IncomeFactory extends Factory
             'team' => $this->faker->numberBetween(1, 99),
             'payment_method' => $this->faker->randomElement(['Transfer Bank', 'Kartu Kredit', 'Virtual Account', 'Instant Payment']),
             'type' => $this->faker->randomElement(['Donasi', 'Sponsor']),
+            'on_behalf_of' => $this->faker->name(),
         ];
     }
 }

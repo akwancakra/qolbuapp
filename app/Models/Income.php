@@ -10,6 +10,8 @@ class Income extends Model
     /** @use HasFactory<\Database\Factories\IncomeFactory> */
     use HasFactory;
 
+    protected $guarded = [];
+
     public function ambassador() {
         return $this->belongsTo(Ambassador::class);
     }

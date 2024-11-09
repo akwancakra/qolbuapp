@@ -18,6 +18,7 @@ class UserSeeder extends Seeder
                 'name' => 'Alice Johnson',
                 'email' => 'alice@example.com', // Unique email
                 'password' => bcrypt('password123'), // Use a secure password
+                'role' => 'duta',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -25,6 +26,7 @@ class UserSeeder extends Seeder
                 'name' => 'Bob Smith',
                 'email' => 'bob@example.com', // Unique email
                 'password' => bcrypt('password456'), // Use a secure password
+                'role' => 'admin',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -32,6 +34,7 @@ class UserSeeder extends Seeder
                 'name' => 'Charlie Brown',
                 'email' => 'charlie@example.com', // Unique email
                 'password' => bcrypt('password789'), // Use a secure password
+                'role' => 'pengurus',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -39,6 +42,7 @@ class UserSeeder extends Seeder
                 'name' => 'David Wilson',
                 'email' => 'david@example.com', // Unique email
                 'password' => bcrypt('password101'), // Use a secure password
+                'role' => 'duta',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -46,6 +50,7 @@ class UserSeeder extends Seeder
                 'name' => 'Eve Davis',
                 'email' => 'eve@example.com', // Unique email
                 'password' => bcrypt('password202'), // Use a secure password
+                'role' => 'duta',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],

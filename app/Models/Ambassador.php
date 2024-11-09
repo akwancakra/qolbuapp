@@ -14,7 +14,14 @@ class Ambassador extends Model
 
     protected $hidden = ['phone_number'];
 
-    public function revenues() {
+    public function incomes() {
         return $this->hasMany(Income::class);
+    }
+
+    public static function topTenByIncome() {
+        return self::withSum('incomes', 'amount')
+            ->orderByDesc('incomes_sum_amount')
+            ->take(10)
+            ->get();
     }
 }

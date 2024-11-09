@@ -14,7 +14,7 @@ class BeneficiaryController extends Controller
      */
     public function index()
     {
-        return view('member.beneficiaries.index');
+        return view('board_member.beneficiaries.index');
     }
 
     /**
@@ -22,7 +22,7 @@ class BeneficiaryController extends Controller
      */
     public function create()
     {
-        return view('member.beneficiaries.create');
+        return view('board_member.beneficiaries.create');
     }
 
     /**
@@ -57,7 +57,7 @@ class BeneficiaryController extends Controller
      */
     public function show(Beneficiary $beneficiary)
     {
-        return view('member.beneficiaries.show', [
+        return view('board_member.beneficiaries.show', [
             'beneficiary' => $beneficiary
         ]);
     }
@@ -67,7 +67,7 @@ class BeneficiaryController extends Controller
      */
     public function edit(Beneficiary $beneficiary)
     {
-        return view('member.beneficiaries.edit', [
+        return view('board_member.beneficiaries.edit', [
             'beneficiary' => $beneficiary
         ]);
     }
@@ -96,7 +96,7 @@ class BeneficiaryController extends Controller
             ])
         );
 
-        return redirect()->route('member.beneficiaries.index');
+        return redirect()->route('board_member.beneficiaries.index');
     }
 
     /**
@@ -106,6 +106,6 @@ class BeneficiaryController extends Controller
     {
         $beneficiary->delete();
 
-        return redirect()->route('member.beneficiaries.index');
+        return redirect()->route('board_member.beneficiaries.index');
     }
 }

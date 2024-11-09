@@ -22,6 +22,9 @@ class IncomeSeeder extends Seeder
                 'team' => '1',
                 'payment_method' => 'Bank Transfer',
                 'type' => 'Donation',
+                'on_behalf_of' => 'Grandfather',
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
                 'ambassador_id' => 2,
@@ -31,6 +34,9 @@ class IncomeSeeder extends Seeder
                 'team' => '2',
                 'payment_method' => 'Cash',
                 'type' => 'Sponsorship',
+                'on_behalf_of' => 'Grandfather',
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
                 'ambassador_id' => 3,
@@ -40,6 +46,9 @@ class IncomeSeeder extends Seeder
                 'team' => '3',
                 'payment_method' => 'Credit Card',
                 'type' => 'Donation',
+                'on_behalf_of' => 'Grandfather',
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
                 'ambassador_id' => 4,
@@ -49,6 +58,9 @@ class IncomeSeeder extends Seeder
                 'team' => '4',
                 'payment_method' => 'Bank Transfer',
                 'type' => 'Sponsorship',
+                'on_behalf_of' => 'Grandfather',
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
                 'ambassador_id' => 5,
@@ -58,6 +70,9 @@ class IncomeSeeder extends Seeder
                 'team' => '4',
                 'payment_method' => 'Cash',
                 'type' => 'Donation',
+                'on_behalf_of' => 'Grandfather',
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
         ]);
     }

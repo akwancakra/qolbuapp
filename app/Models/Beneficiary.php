@@ -40,6 +40,13 @@ class Beneficiary extends Model
         }
     }
 
+    public function scopeSchoolGrade($query, $school_grade)
+    {
+        if ($school_grade) {
+            return $query->where('school_grade', $school_grade);
+        }
+    }
+
     public function scopeStatus($query, $status)
     {
         if ($status) {

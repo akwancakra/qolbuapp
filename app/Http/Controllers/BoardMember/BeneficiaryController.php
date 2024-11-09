@@ -19,6 +19,7 @@ class BeneficiaryController extends Controller
             ->search($request->search)
             ->age($request->min_age, $request->max_age)
             ->educationLevel($request->education_level)
+            ->schoolGrade($request->school_grade)
             ->status($request->status)
             ->sortBy($request->input('sort_by', 'created_at'), $request->input('sort_direction', 'desc'))
             ->paginate(10);

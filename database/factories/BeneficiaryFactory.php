@@ -24,7 +24,7 @@ class BeneficiaryFactory extends Factory
             'school_grade' => $this->faker->numberBetween(1, 3),
             'shirt_size' => $this->faker->randomElement(['S', 'M', 'L', 'XL']),
             'shoe_size' => $this->faker->numberBetween(24, 44),
-            'description' => $this->faker->randomElement(['Yatim', 'Piatu', 'Yatim Piatu', 'Dhuafa']),
+            'status' => $this->faker->randomElement(['Yatim', 'Piatu', 'Yatim Piatu', 'Dhuafa']),
             'phone_number' => $this->faker->phoneNumber(),
             'death_certificate_number' => $this->faker->bothify('??/##/???/????'),
         ];

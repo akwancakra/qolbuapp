@@ -46,7 +46,7 @@ class BeneficiaryController extends Controller
                 'school_grade' => 'nullable|integer',
                 'shirt_size' => 'nullable|string',
                 'shoe_size' => 'nullable|integer',
-                'description' => 'nullable|string',
+                'status' => ['nullable', Rule::in(['Yatim', 'Piatu', 'Yatim Piatu', 'Dhuafa'])],
                 'phone_number' => 'nullable|string',
                 'death_certificate_number' => 'nullable|string',
             ])
@@ -89,7 +89,7 @@ class BeneficiaryController extends Controller
                 'school_grade' => 'nullable|integer',
                 'shirt_size' => 'nullable|string',
                 'shoe_size' => 'nullable|integer',
-                'description' => 'nullable|string',
+                'status' => ['nullable', Rule::in(['Yatim', 'Piatu', 'Yatim Piatu', 'Dhuafa'])],
                 'phone_number' => 'nullable|string|digits_between:7,15',
                 'death_certificate_number' => 'nullable|string',
             ])

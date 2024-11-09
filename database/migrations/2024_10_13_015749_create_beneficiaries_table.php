@@ -25,7 +25,7 @@ return new class extends Migration
             $table->string('school_grade')->nullable();
             $table->string('shirt_size')->nullable();
             $table->integer('shoe_size')->nullable();
-            $table->string('description')->nullable();
+            $table->enum('status', ['Yatim', 'Piatu', 'Yatim Piatu', 'Dhuafa'])->nullable();
             $table->string('phone_number', 15)->nullable();
             $table->string('death_certificate_number')->nullable();
             $table->timestamps();

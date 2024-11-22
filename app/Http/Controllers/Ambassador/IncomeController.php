@@ -13,9 +13,15 @@ class IncomeController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $incomes = Income::all();
+        $incomes = Income::query()
+            ->search($request->search)
+            ->team($request->team)
+            ->transferDate($request->transfer_date)
+            ->sortBy($request->input('sort_by', 'created_at'), $request->input('sort_direction', 'desc'))
+            ->paginate(10);
+
         $topTenAmbassadors = Ambassador::topTenByIncome();
 
         return Inertia::render('Ambassador/Income/Index', compact('incomes', 'topTenAmbassadors'));

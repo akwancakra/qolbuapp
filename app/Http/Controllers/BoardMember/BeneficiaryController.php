@@ -16,8 +16,8 @@ class BeneficiaryController extends Controller
     public function index()
     {
         $beneficiaries = Beneficiary::all();
-        
-        return Inertia::render('BoardMember/Beneficiaries/Index', compact('beneficiaries'));
+
+        return Inertia::render('BoardMember/Beneficiary/Index', compact('beneficiaries'));
     }
 
     /**
@@ -25,14 +25,14 @@ class BeneficiaryController extends Controller
      */
     public function create()
     {
-        return Inertia::render('BoardMember/Beneficiaries/Create');
+        return Inertia::render('BoardMember/Beneficiary/Create');
     }
 
     /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
-    {        
+    {
         Beneficiary::create(
             $request->validate([
                 'name' => 'required|string',
@@ -60,7 +60,7 @@ class BeneficiaryController extends Controller
      */
     public function show(Beneficiary $beneficiary)
     {
-        return Inertia::render('BoardMember/Beneficiaries/Show', compact('beneficiary'));
+        return Inertia::render('BoardMember/Beneficiary/Show', compact('beneficiary'));
     }
 
     /**
@@ -68,7 +68,7 @@ class BeneficiaryController extends Controller
      */
     public function edit(Beneficiary $beneficiary)
     {
-        return Inertia::render('BoardMember/Beneficiaries/Edit', compact('beneficiary'));
+        return Inertia::render('BoardMember/Beneficiary/Edit', compact('beneficiary'));
     }
 
     /**

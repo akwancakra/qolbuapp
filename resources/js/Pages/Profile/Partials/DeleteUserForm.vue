@@ -1,42 +1,27 @@
 <script setup lang="ts">
-import DangerButton from '@/Components/DangerButton.vue';
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import Modal from '@/Components/Modal.vue';
-import SecondaryButton from '@/Components/SecondaryButton.vue';
-import TextInput from '@/Components/TextInput.vue';
 import { useForm } from '@inertiajs/vue3';
-import { nextTick, ref } from 'vue';
+import { ref } from 'vue';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/Components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/Components/ui/input';
+import { Label } from '@/components/ui/label';
+// import { InputError } from '@/Components/ui/input-error';
 
-const confirmingUserDeletion = ref(false);
 const passwordInput = ref<HTMLInputElement | null>(null);
 
 const form = useForm({
     password: '',
 });
 
-const confirmUserDeletion = () => {
-    confirmingUserDeletion.value = true;
-
-    nextTick(() => passwordInput.value?.focus());
-};
-
 const deleteUser = () => {
     form.delete(route('profile.destroy'), {
         preserveScroll: true,
-        onSuccess: () => closeModal(),
+        // onSuccess: () => closeModal(),
         onError: () => passwordInput.value?.focus(),
         onFinish: () => {
             form.reset();
         },
     });
-};
-
-const closeModal = () => {
-    confirmingUserDeletion.value = false;
-
-    form.clearErrors();
-    form.reset();
 };
 </script>
 
@@ -54,40 +39,32 @@ const closeModal = () => {
             </p>
         </header>
 
-        <DangerButton @click="confirmUserDeletion">Delete Account</DangerButton>
-
-        <Modal :show="confirmingUserDeletion" @close="closeModal">
-            <div class="p-6">
-                <h2 class="text-lg font-medium text-gray-900">
-                    Are you sure you want to delete your account?
-                </h2>
-
-                <p class="mt-1 text-sm text-gray-600">
-                    Once your account is deleted, all of its resources and data
-                    will be permanently deleted. Please enter your password to
-                    confirm you would like to permanently delete your account.
-                </p>
-
+        <AlertDialog>
+            <AlertDialogTrigger as-child>
+                <Button variant="destructive">Hapus Akun</Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent class="p-4">
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure you want to delete your account?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Once your account is deleted, all of its resources and data will be permanently deleted. Please
+                        enter your password to confirm you would like to permanently delete your account.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
                 <div class="mt-6">
-                    <InputLabel for="password" value="Password" class="sr-only" />
-
-                    <TextInput id="password" ref="passwordInput" v-model="form.password" type="password"
+                    <Label for="password">Password</Label>
+                    <Input id="password" ref="passwordInput" v-model="form.password" type="password"
                         class="mt-1 block w-3/4" placeholder="Password" @keyup.enter="deleteUser" />
-
-                    <InputError :message="form.errors.password" class="mt-2" />
+                    <div class="mt-2 text-red-600" v-if="form.errors.password">{{ form.errors.password }}</div>
                 </div>
-
-                <div class="mt-6 flex justify-end">
-                    <SecondaryButton @click="closeModal">
-                        Cancel
-                    </SecondaryButton>
-
-                    <DangerButton class="ms-3" :class="{ 'opacity-25': form.processing }" :disabled="form.processing"
-                        @click="deleteUser">
-                        Delete Account
-                    </DangerButton>
-                </div>
-            </div>
-        </Modal>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Batal</AlertDialogCancel>
+                    <AlertDialogAction as-child>
+                        <Button variant="destructive" :disabled="form.processing" @click="deleteUser">Hapus
+                            Akun</Button>
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     </section>
 </template>

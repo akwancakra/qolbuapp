@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { defineProps, ref, computed } from 'vue';
-import { Link } from '@inertiajs/vue3';
+import { defineProps, ref, computed, watch } from 'vue';
+import { Link, useForm } from '@inertiajs/vue3';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
@@ -13,14 +13,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/Components/ui/table';
-import {
-    Select,
-    SelectContent,
-    SelectGroup,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/Components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -40,18 +33,22 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from '@/Components/ui/alert-dialog';
-import { Ellipsis, ChevronDown, Pencil, Trash2 } from 'lucide-vue-next';
+import { Ellipsis, Pencil, Plus, Trash2 } from 'lucide-vue-next';
 import { Head } from '@inertiajs/vue3';
 import { Checkbox } from '@/Components/ui/checkbox';
 // LOCAL COMPONENTS
-import { User } from '@/types';
+import { PaginatedUsers } from '@/types';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
+import { Inertia } from '@inertiajs/inertia';
 
-defineProps<{
-    users: User[]; // props users yang berisi array dari User
+const props = defineProps<{
+    users: PaginatedUsers; // props users yang berisi array dari User
+    filters: {
+        search: string,
+        role: string
+    }
 }>();
 
-// ========== SECTION 3 ==========
 // State untuk melacak checkbox yang dipilih
 const selectedUsers = ref<number[]>([]);
 
@@ -68,16 +65,34 @@ const toggleCheckbox = (checked: boolean, id: number) => {
 };
 
 const deleteUser = (id: number) => {
-    console.log("Delete user with id: " + id);
+    Inertia.delete(route('admin.users.destroy', id));
 };
 
 // Function untuk menghapus user yang dipilih
 const deleteSelectedUsers = () => {
-    console.log("Delete users with ids: " + selectedUsers.value.join(", "));
-    // Implement the actual deletion logic here
-    // After deletion, clear the selection
-    selectedUsers.value = [];
+    Inertia.post(route('admin.users.destroy-multiple'), {
+        ids: selectedUsers.value
+    }, {
+        preserveState: true,
+        onSuccess: () => {
+            selectedUsers.value = [];
+        }
+    });
 };
+
+// Form untuk pencarian dan filter
+const form = useForm({
+    search: '',
+    role: 'default',
+});
+
+// Watch untuk mengirimkan permintaan pencarian dan filter
+watch(() => form.data(), (newData) => {
+    form.get(route('admin.users.index'), { preserveState: true });
+    form.search = newData.search;
+    form.role = newData.role;
+});
+
 </script>
 
 <template>
@@ -106,12 +121,13 @@ const deleteSelectedUsers = () => {
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                        <DropdownMenuLabel>Aksi</DropdownMenuLabel>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem>Profile</DropdownMenuItem>
-                        <DropdownMenuItem>Billing</DropdownMenuItem>
-                        <DropdownMenuItem>Team</DropdownMenuItem>
-                        <DropdownMenuItem>Subscription</DropdownMenuItem>
+                        <DropdownMenuItem as-child>
+                            <Link :href="route('admin.users.create')" class="cursor-pointer flex gap-1">
+                            <Plus :size="18" /> Tambah Akun
+                            </Link>
+                        </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
@@ -119,20 +135,19 @@ const deleteSelectedUsers = () => {
             <div class="grid gap-3 grid-cols-2 sm:grid-cols-4">
                 <div>
                     <Label for="name">Name</Label>
-                    <Input type="text" id="name" />
+                    <Input type="text" id="name" v-model="form.search" placeholder="Cari nama..." />
                 </div>
                 <div>
-                    <Label for="type">Tipe Peran</Label>
-                    <Select>
+                    <Label>Tipe User</Label>
+                    <Select v-model="form.role" @update:model-value="form.role = $event">
                         <SelectTrigger>
-                            <SelectValue placeholder="Pilih Tipe Peran" />
+                            <SelectValue :placeholder="form.role || 'Pilih Tipe User'" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectGroup>
-                                <SelectItem value="admin">Admin</SelectItem>
-                                <SelectItem value="pengurus">Pengurus</SelectItem>
-                                <SelectItem value="duta">Duta</SelectItem>
-                            </SelectGroup>
+                            <SelectItem value="default">Semua</SelectItem>
+                            <SelectItem value="admin">Admin</SelectItem>
+                            <SelectItem value="pengurus">Pengurus</SelectItem>
+                            <SelectItem value="duta">Duta</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
@@ -140,7 +155,6 @@ const deleteSelectedUsers = () => {
         </section>
 
         <section class="bg-white p-3 rounded-lg dark:bg-neutral-800">
-            <!-- <p class="font-semibold text-2xl tracking-tight">Overview Minggu 1 Sept</p> -->
             <div v-if="selectedCount > 0" class="mb-3 flex items-center justify-between">
                 <p class="font-semibold tracking-tight text-lg">({{ selectedCount }}) akun dipilih</p>
                 <AlertDialog>
@@ -178,11 +192,8 @@ const deleteSelectedUsers = () => {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        <TableRow v-for="user in users" :key="user.id">
+                        <TableRow v-for="user in users.data" :key="user.id">
                             <TableCell class="p-3">
-                                <!-- <input type="checkbox" :id="`user-${user.id}`"
-                                    :checked="selectedUsers.includes(user.id)" @change="toggleCheckbox(user.id)"
-                                    class="cursor-pointer w-4 h-4 rounded-md checked:bg-blue-500" /> -->
                                 <Checkbox :id="`user-${user.id}`" :checked="selectedUsers.includes(user.id)"
                                     @update:checked="(checked) => toggleCheckbox(checked, user.id)" />
                             </TableCell>
@@ -199,14 +210,12 @@ const deleteSelectedUsers = () => {
                                     <DropdownMenuContent align="end">
                                         <DropdownMenuLabel>Aksi</DropdownMenuLabel>
                                         <DropdownMenuSeparator />
-                                        <!-- Link untuk mengedit user -->
                                         <DropdownMenuItem as-child>
-                                            <Link :href="route('users.edit', user.id)"
+                                            <Link :href="route('admin.users.edit', user)"
                                                 class="cursor-pointer flex gap-1">
                                             <Pencil :size="18" /> Ubah
                                             </Link>
                                         </DropdownMenuItem>
-                                        <!-- Item untuk hapus dengan background merah -->
                                         <DropdownMenuItem as-child>
                                             <AlertDialog>
                                                 <AlertDialogTrigger

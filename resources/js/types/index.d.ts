@@ -1,4 +1,4 @@
-export interface User {
+export type User = {
     id: number;
     name: string;
     email: string;
@@ -6,22 +6,33 @@ export interface User {
     role: string;
     created_at: string;
     updated_at: string;
-}
+};
 
-export interface Transaction {
+export type Income = {
     id: number;
-    duta: string;
-    donatur: string;
+    ambassador_id: number;
+    donor: string;
     transfer_date: string;
-    nominal: number;
-    metode: string;
-    jenis: string;
-    timestamps: string;
+    on_behalf_of: string;
+    amount: number;
+    payment_method: string;
+    type: string;
     created_at: string;
     updated_at: string;
-}
+    ambassador?: Ambassador;
+};
 
-export interface Beneficiary {
+export type Ambassador = {
+    id: number;
+    name: string;
+    phone_number: string;
+    code: string;
+    created_at: string;
+    updated_at: string;
+    incomes?: Income[];
+};
+
+export type Beneficiary = {
     id: number;
     name: string;
     nickname?: string;
@@ -40,7 +51,67 @@ export interface Beneficiary {
     parent_father_phone?: string;
     created_at: string;
     updated_at: string;
-}
+};
+
+export type PaginatedUsers = {
+    current_page: number;
+    data: User[];
+    first_page_url: string;
+    from: number;
+    last_page: number;
+    last_page_url: string;
+    links: Array<{
+        url: string | null;
+        label: string;
+        active: boolean;
+    }>;
+    next_page_url: string | null;
+    path: string;
+    per_page: number;
+    prev_page_url: string | null;
+    to: number;
+    total: number;
+};
+
+export type PaginatedIncomes = {
+    current_page: number;
+    data: Income[];
+    first_page_url: string;
+    from: number;
+    last_page: number;
+    last_page_url: string;
+    links: Array<{
+        url: string | null;
+        label: string;
+        active: boolean;
+    }>;
+    next_page_url: string | null;
+    path: string;
+    per_page: number;
+    prev_page_url: string | null;
+    to: number;
+    total: number;
+};
+
+export type PaginationTemplate = {
+    current_page: number;
+    data: any[];
+    first_page_url: string;
+    from: number;
+    last_page: number;
+    last_page_url: string;
+    links: Array<{
+        url: string | null;
+        label: string;
+        active: boolean;
+    }>;
+    next_page_url: string | null;
+    path: string;
+    per_page: number;
+    prev_page_url: string | null;
+    to: number;
+    total: number;
+};
 
 export type PageProps<
     T extends Record<string, unknown> = Record<string, unknown>

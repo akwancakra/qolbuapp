@@ -22,6 +22,7 @@ import {
     LogOutIcon,
     SunIcon,
     MoonIcon,
+    SidebarIcon,
 } from 'lucide-vue-next';
 
 const props = defineProps({
@@ -77,8 +78,8 @@ const toggleSidebar = () => {
 // Menu items
 const menuItems = ref([
     { name: 'Dasbor', icon: HomeIcon, href: route('dashboard'), roles: ['admin', 'pengurus', 'duta'], prefix: 'dashboard' },
-    { name: 'Transferan', icon: ReceiptTextIcon, href: user.value.role === 'pengurus' ? route('pengurus.transactions.index') : route('duta.transactions.index'), roles: ['pengurus', 'duta'], prefix: 'transactions' },
-    { name: 'Penerima Manfaat', icon: HeartHandshakeIcon, href: user.value.role === 'pengurus' ? route('pengurus.beneficiaries.index') : route('duta.beneficiaries.index'), roles: ['pengurus', 'duta'], prefix: 'beneficiaries' },
+    { name: 'Pendapatan', icon: ReceiptTextIcon, href: user.value.role === 'pengurus' ? route('board_member.incomes.index') : route('ambassador.incomes.index'), roles: ['pengurus', 'duta'], prefix: 'incomes' },
+    { name: 'Penerima Manfaat', icon: HeartHandshakeIcon, href: user.value.role === 'pengurus' ? route('board_member.beneficiaries.index') : route('ambassador.beneficiaries.index'), roles: ['pengurus', 'duta'], prefix: 'beneficiaries' },
     { name: 'Akun', icon: UsersIcon, href: route('admin.users.index'), roles: ['admin'], prefix: 'users' },
     { name: 'Profil', icon: SquareUserIcon, href: route('profile.edit'), roles: ['admin', 'pengurus', 'duta'], prefix: 'profile' },
 ]);
@@ -206,7 +207,7 @@ watchEffect(() => {
                         </Sheet>
 
                         <Button v-if="!isTablet" variant="outline" size="icon" @click="toggleSidebar">
-                            <ChevronLeftIcon v-if="isExpanded" size="18" />
+                            <SidebarIcon v-if="isExpanded" size="18" />
                             <ChevronRightIcon v-else size="18" />
                         </Button>
                         <slot name="header">

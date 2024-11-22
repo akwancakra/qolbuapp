@@ -10,15 +10,17 @@ class Ambassador extends Model
     /** @use HasFactory<\Database\Factories\AmbassadorFactory> */
     use HasFactory;
 
-    protected $guarded = [];
+    // protected $guarded = [];
+    // protected $hidden = ['phone_number'];
+    protected $fillable = ['name', 'phone_number', 'code'];
 
-    protected $hidden = ['phone_number'];
-
-    public function incomes() {
+    public function incomes()
+    {
         return $this->hasMany(Income::class);
     }
 
-    public static function topTenByIncome() {
+    public static function topTenByIncome()
+    {
         return self::withSum('incomes', 'amount')
             ->orderByDesc('incomes_sum_amount')
             ->take(10)

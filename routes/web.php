@@ -40,11 +40,11 @@ Route::get('/', function () {
             // return Inertia::render('Admin/Dashboard', ['user' => $user]);
         case 'pengurus':
             // return redirect()->route('board_member.dashboard');
-            return redirect()->route('pengurus.dashboard');
+            return redirect()->route('board_member.dashboard');
             // return Inertia::render('Pengurus/Dashboard', ['user' => $user]);
         case 'duta':
             // return redirect()->route('ambassador.dashboard');
-            return redirect()->route('duta.dashboard');
+            return redirect()->route('ambassador.dashboard');
             // return Inertia::render('Duta/Dashboard', ['user' => $user]);
         default:
             return redirect()->route('login');
@@ -66,6 +66,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('ad')->group(function () {
         'update' => 'admin.users.update',
         'destroy' => 'admin.users.destroy',
     ]);
+    Route::post('/users/destroy-multiple', [AdminUserController::class, 'destroyMultiple'])->name('admin.users.destroy-multiple');
 });
 
 Route::middleware(['auth', 'role:pengurus'])->prefix('pe')->group(function () {
@@ -116,19 +117,19 @@ Route::middleware(['auth', 'role:duta'])->prefix('am')->group(function () {
     })->name('ambassador.dashboard');
 
     Route::resource('beneficiaries', AmbassadorBeneficiaryController::class)
-    ->only(['index', 'show'])
-    ->names([
-        'index' => 'ambassador.beneficiaries.index',
-        'show' => 'ambassador.beneficiaries.show',
-    ]);
+        ->only(['index', 'show'])
+        ->names([
+            'index' => 'ambassador.beneficiaries.index',
+            'show' => 'ambassador.beneficiaries.show',
+        ]);
 
     Route::resource('incomes', AmbassadorIncomeController::class)
-    ->only(['index', 'create', 'store'])
-    ->names([
-        'index' => 'ambassador.incomes.index',
-        'create' => 'ambassador.incomes.create',
-        'store' => 'ambassador.incomes.store',
-    ]);
+        ->only(['index', 'create', 'store'])
+        ->names([
+            'index' => 'ambassador.incomes.index',
+            'create' => 'ambassador.incomes.create',
+            'store' => 'ambassador.incomes.store',
+        ]);
 });
 
 Route::middleware(['auth', 'role:pengurus'])->prefix('bm')->group(function () {

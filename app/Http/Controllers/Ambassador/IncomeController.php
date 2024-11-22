@@ -18,7 +18,7 @@ class IncomeController extends Controller
         $incomes = Income::all();
         $topTenAmbassadors = Ambassador::topTenByIncome();
 
-        return Inertia::render('Ambassador/Incomes/Index', compact('incomes', 'topTenAmbassadors'));
+        return Inertia::render('Ambassador/Income/Index', compact('incomes', 'topTenAmbassadors'));
     }
 
     /**
@@ -26,7 +26,7 @@ class IncomeController extends Controller
      */
     public function create()
     {
-        return Inertia::render('Ambassador/Incomes/Create');
+        return Inertia::render('Ambassador/Income/Create');
     }
 
     /**

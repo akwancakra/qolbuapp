@@ -5,20 +5,173 @@ namespace App\Http\Controllers\BoardMember;
 use App\Http\Controllers\Controller;
 use App\Models\Ambassador;
 use App\Models\Income;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class IncomeController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request): Response
     {
-        $incomes = Income::all();
-        $topTenAmbassadors = Ambassador::topTenByIncome();
+        // ========================================================
+        // VALIDATING AND GETTING DATA FOR FILTERING AND SEARCHING
+        // ========================================================
+        $name = $request->input('name') ?? 'default';
+        $teamCode = $request->input('teamCode') ?? 'default';
+        $time = $request->input('time') ?? 'default';
+        $startRange = $request->input('startRange');
+        $endRange = $request->input('endRange');
+        $week = $request->input('week');
+        $month = $request->input('month');
+        $year = $request->input('year');
 
-        return Inertia::render('BoardMember/Incomes/Index', compact('incomes', 'topTenAmbassadors'));
+        if ($teamCode === 'default') {
+            $teamCode = null;
+        }
+
+        if ($time === 'default') {
+            $time = null;
+            $startRange = null;
+            $endRange = null;
+            $week = null;
+            $month = null;
+            $year = null;
+        }
+
+        if ($name === 'default') {
+            $name = null;
+        }
+        // ========================================================
+        // VALIDATING AND GETTING DATA FOR FILTERING AND SEARCHING
+        // ========================================================
+
+        $topTenAmbassadors = Ambassador::topTenByIncome();
+        $availableTeamCodes = Ambassador::select('code')
+            ->distinct()
+            ->orderBy('code')
+            ->get()
+            ->pluck('code')
+            ->toArray();
+        $availableAmbassadors = Ambassador::select('id', 'name')->get();
+        $availableAmbassadors = $availableAmbassadors->map(function ($ambassador) {
+            return [
+                'label' => $ambassador->name,
+                'value' => $ambassador->id,
+            ];
+        });
+        $availableMonths = [
+            ['value' => '01', 'label' => 'Januari'],
+            ['value' => '02', 'label' => 'Februari'],
+            ['value' => '03', 'label' => 'Maret'],
+            ['value' => '04', 'label' => 'April'],
+            ['value' => '05', 'label' => 'Mei'],
+            ['value' => '06', 'label' => 'Juni'],
+            ['value' => '07', 'label' => 'Juli'],
+            ['value' => '08', 'label' => 'Agustus'],
+            ['value' => '09', 'label' => 'September'],
+            ['value' => '10', 'label' => 'Oktober'],
+            ['value' => '11', 'label' => 'November'],
+            ['value' => '12', 'label' => 'Desember'],
+        ];
+
+        $incomesQuery = Income::with('ambassador')
+            ->when($name, function ($query, $name) {
+                return $query->whereHas('ambassador', function ($query) use ($name) {
+                    $query->where('name', 'like', '%' . $name . '%');
+                });
+            })
+            ->when($teamCode, function ($query, $teamCode) {
+                return $query->whereHas('ambassador', function ($query) use ($teamCode) {
+                    $query->where('code', $teamCode);
+                });
+            })
+            ->orderByDesc('created_at');
+
+        $allIncomes = $incomesQuery->get();
+        $incomes = $incomesQuery
+            ->when($startRange && $endRange, function ($query) use ($startRange, $endRange) {
+                return $query->whereBetween('transfer_date', [$startRange, $endRange]);
+            })
+            ->when($time === 'weekly' && $week, function ($query) use ($week) {
+                $start = Carbon::parse($week);
+                $end = $start->copy()->addDays(6);
+                return $query->whereBetween('transfer_date', [$start, $end]);
+            })
+            ->when($time === 'monthly' && $month && $year, function ($query) use ($month, $year) {
+                return $query->whereMonth('transfer_date', $month)->whereYear('transfer_date', $year);
+            })
+            ->when($time === 'yearly' && $year, function ($query) use ($year) {
+                return $query->whereYear('transfer_date', $year);
+            })->paginate(10);
+
+        // Proses pengelompokan minggu
+        $incomeDates = Income::selectRaw('MIN(transfer_date) as start_date, MAX(transfer_date) as end_date')->first();
+        $startDate = $incomeDates->start_date;
+        $endDate = $incomeDates->end_date;
+        $startDate = Carbon::parse($startDate)->startOfDay();
+        $endDate = Carbon::parse($endDate)->endOfDay();
+
+        $incomesInWeeks = [];
+        $availableYears = [];
+        $currentStartDate = $startDate->copy();
+        $currentEndDate = $currentStartDate->copy()->addDays(6);
+
+        // ========================================================
+        // GETTING DATA FOR FIILTERING AND SEARCHING
+        // ========================================================
+        while ($currentStartDate->lte($endDate)) {
+            $weeklyData = $allIncomes->filter(function ($income) use ($currentStartDate, $currentEndDate) {
+                $incomeDate = Carbon::parse($income->transfer_date);
+                return $incomeDate->between($currentStartDate, $currentEndDate);
+            });
+
+            if ($weeklyData->isNotEmpty()) {
+                $incomesInWeeks[] = [
+                    'label' => $currentStartDate->format('M') . ' Min ' . ceil($currentStartDate->day / 7) . ' (' . $currentStartDate->format('d M Y') . ' - ' . $currentEndDate->format('d M Y') . ')',
+                    'value' => $currentStartDate->format('Y-m-d'),
+                    // 'start' => $currentStartDate->format('Y-m-d'),
+                    // 'end' => $currentEndDate->format('Y-m-d'),
+                    // 'data' => $weeklyData,
+                ];
+            }
+
+            $currentStartDate->addDays(7);
+            $currentEndDate->addDays(7);
+        }
+
+        foreach ($allIncomes as $income) {
+            $year = (string) Carbon::parse($income->transfer_date)->year;
+            if (!in_array($year, $availableYears)) {
+                $availableYears[] = $year;
+            }
+        }
+        // ========================================================
+        // GETTING DATA FOR FIILTERING AND SEARCHING
+        // ========================================================
+
+        return Inertia::render('BoardMember/Income/Index', [
+            'incomes' => $incomes,
+            'topTenAmbassadors' => $topTenAmbassadors,
+            'availableYears' => $availableYears,
+            'availableMonths' => $availableMonths,
+            'availableTeamCodes' => $availableTeamCodes,
+            'availableAmbassadors' => $availableAmbassadors,
+            'incomesInWeeks' => $incomesInWeeks,
+            'filters' => [
+                'name' => $name,
+                'teamCode' => $teamCode,
+                'time' => $time,
+                'startRange' => $startRange,
+                'endRange' => $endRange,
+                'week' => $week,
+                'month' => $month,
+                'year' => $year,
+            ]
+        ]);
     }
 
     /**
@@ -26,7 +179,17 @@ class IncomeController extends Controller
      */
     public function create()
     {
-        return Inertia::render('BoardMember/Incomes/Create');
+        $availableAmbassadors = Ambassador::select('id', 'name')->get();
+        $availableAmbassadors = $availableAmbassadors->map(function ($ambassador) {
+            return [
+                'label' => $ambassador->name,
+                'value' => $ambassador->id,
+            ];
+        });
+
+        return Inertia::render('BoardMember/Income/Create', [
+            'availableAmbassadors' => $availableAmbassadors
+        ]);
     }
 
     /**
@@ -66,7 +229,19 @@ class IncomeController extends Controller
      */
     public function edit(Income $income)
     {
-        return Inertia::render('BoardMember/Incomes/Edit', compact('income'));
+        $availableAmbassadors = Ambassador::select('id', 'name')->get();
+        $availableAmbassadors = $availableAmbassadors->map(function ($ambassador) {
+            return [
+                'label' => $ambassador->name,
+                'value' => $ambassador->id,
+            ];
+        });
+
+        return Inertia::render('BoardMember/Income/Edit', [
+            'income' => $income,
+            'ambassador' => $income->ambassador,
+            'availableAmbassadors' => $availableAmbassadors
+        ]);
     }
 
     /**

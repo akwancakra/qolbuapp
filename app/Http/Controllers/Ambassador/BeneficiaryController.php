@@ -16,7 +16,7 @@ class BeneficiaryController extends Controller
     {
         $beneficiaries = Beneficiary::all();
 
-        return Inertia::render('Ambassador/Beneficiaries/Index', compact('beneficiaries'));
+        return Inertia::render('Ambassador/Beneficiary/Index', compact('beneficiaries'));
     }
 
     /**
@@ -24,6 +24,6 @@ class BeneficiaryController extends Controller
      */
     public function show(Beneficiary $beneficiary)
     {
-        return Inertia::render('Ambassador/Beneficiaries/Show', compact('beneficiary'));
+        return Inertia::render('Ambassador/Beneficiary/Show', compact('beneficiary'));
     }
 }

@@ -13,43 +13,31 @@ use Inertia\Response;
 
 class UserController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        // $users = User::all();
-        $users = [
-            [
-                'id' => 1,
-                'name' => 'John Doe',
-                'role' => 'admin',
-                'email' => 'john@example.com'
-            ],
-            [
-                'id' => 2,
-                'name' => 'Bobby Marshal',
-                'role' => 'pengurus',
-                'email' => 'bobby@example.com'
-            ],
-            [
-                'id' => 3,
-                'name' => 'Jane Doe',
-                'role' => 'pengurus',
-                'email' => 'jane@example.com'
-            ],
-            [
-                'id' => 4,
-                'name' => 'Alice Brown',
-                'role' => 'pengurus',
-                'email' => 'alice@example.com'
-            ],
-            [
-                'id' => 5,
-                'name' => 'Bob Smith',
-                'role' => 'duta',
-                'email' => 'bob@example.com'
-            ],
-        ];
+        $search = $request->input('search');
+        $role = $request->input('role');
 
-        return Inertia::render('Admin/User/Index', ['users' => $users]);
+        if ($role === 'default') {
+            $role = null;
+        }
+
+        $users = User::query()
+            ->when($search, function ($query, $search) {
+                return $query->where('name', 'like', '%' . $search . '%');
+            })
+            ->when($role, function ($query, $role) {
+                return $query->where('role', $role);
+            })
+            ->paginate(10);
+
+        return Inertia::render('Admin/User/Index', [
+            'users' => $users,
+            'filters' => [
+                'search' => $search,
+                'role' => $role
+            ],
+        ]);
     }
 
     public function show(User $user): Response
@@ -66,17 +54,19 @@ class UserController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'role' => 'required|string|in:admin,pengurus,duta',
             'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => 'required|string|min:8',
         ]);
 
         User::create([
             'name' => $request->name,
             'email' => $request->email,
+            'role' => $request->role,
             'password' => Hash::make($request->password),
         ]);
 
-        return Redirect::route('users.index');
+        return Redirect::route('admin.users.index');
     }
 
     public function edit(User $user): Response
@@ -84,26 +74,35 @@ class UserController extends Controller
         return Inertia::render('Admin/User/Edit', ['user' => $user]);
     }
 
-    public function update(Request $request, User $user): RedirectResponse
+    public function update(Request $request, $id): RedirectResponse
     {
+        $user = User::findOrFail($id);
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-            // 'password' => 'nullable|string|min:8|confirmed',
+            'role' => 'required|string|in:admin,pengurus,duta',
         ]);
 
         $user->update([
             'name' => $request->name,
             'email' => $request->email,
-            // 'password' => $request->password ? Hash::make($request->password) : $user->password,
+            'role' => $request->role,
         ]);
 
-        return Redirect::route('users.index');
+        return Redirect::route('admin.users.index');
     }
 
     public function destroy(User $user): RedirectResponse
     {
         $user->delete();
-        return Redirect::route('users.index');
+        return Redirect::route('admin.users.index');
+    }
+
+    public function destroyMultiple(Request $request): RedirectResponse
+    {
+        $ids = $request->input('ids');
+        User::whereIn('id', $ids)->delete();
+        return redirect()->route('admin.users.index');
     }
 }

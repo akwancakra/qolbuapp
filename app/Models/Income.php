@@ -10,9 +10,23 @@ class Income extends Model
     /** @use HasFactory<\Database\Factories\IncomeFactory> */
     use HasFactory;
 
-    protected $guarded = [];
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
+    protected $fillable = [
+        'ambassador_id',
+        'transfer_date',
+        'amount',
+        'donor',
+        'payment_method',
+        'type',
+        'on_behalf_of',
+    ];
 
-    public function ambassador() {
+    public function ambassador()
+    {
         return $this->belongsTo(Ambassador::class);
     }
 }

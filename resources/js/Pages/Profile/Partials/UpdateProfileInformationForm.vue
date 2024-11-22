@@ -6,6 +6,7 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import { Link, useForm, usePage } from '@inertiajs/vue3';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
+import { Button } from '@/Components/ui/button';
 
 defineProps<{
     mustVerifyEmail?: Boolean;
@@ -66,7 +67,8 @@ const form = useForm({
             </div>
 
             <div class="flex items-center gap-4">
-                <PrimaryButton :disabled="form.processing">Save</PrimaryButton>
+                <!-- <PrimaryButton :disabled="form.processing">Save</PrimaryButton> -->
+                <Button :disabled="form.processing">Simpan</Button>
 
                 <Transition enter-active-class="transition ease-in-out" enter-from-class="opacity-0"
                     leave-active-class="transition ease-in-out" leave-to-class="opacity-0">

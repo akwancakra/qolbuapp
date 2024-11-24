@@ -15,19 +15,21 @@ return new class extends Migration
         Schema::create('beneficiaries', function (Blueprint $table) {
             $table->bigIncrements('nik')->primary();
             $table->string('name');
-            $table->string('birth_place');
-            $table->date('birth_date');
-            $table->enum('gender', ['L', 'P']);
+            $table->string('place_of_birth');
+            $table->date('date_of_birth');
+            $table->enum('gender', ['male', 'female']);
             $table->string('neighborhood_unit')->nullable();
             $table->string('father')->nullable();
             $table->string('mother')->nullable();
-            $table->string('education_level')->nullable();
+            $table->string('last_education')->nullable();
             $table->string('school_grade')->nullable();
             $table->string('shirt_size')->nullable();
             $table->integer('shoe_size')->nullable();
             $table->enum('status', ['Yatim', 'Piatu', 'Yatim Piatu', 'Dhuafa'])->nullable();
             $table->string('phone_number', 15)->nullable();
-            $table->string('death_certificate_number')->nullable();
+            $table->string('father_death_certificate_number')->nullable();
+            $table->string('mother_death_certificate_number')->nullable();
+            $table->text('description')->nullable();
             $table->timestamps();
         });
 

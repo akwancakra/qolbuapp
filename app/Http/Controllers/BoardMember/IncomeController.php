@@ -6,12 +6,30 @@ use App\Http\Controllers\Controller;
 use App\Models\Ambassador;
 use App\Models\Income;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class IncomeController extends Controller
 {
+    public $paymentMethods = [
+        ['label' => 'BCA', 'value' => 'BCA'],
+        ['label' => 'BNI', 'value' => 'BNI'],
+        ['label' => 'BRI', 'value' => 'BRI'],
+        ['label' => 'BJB', 'value' => 'BJB'],
+        ['label' => 'Mandiri', 'value' => 'Mandiri'],
+        ['label' => 'Tunai', 'value' => 'Tunai'],
+    ];
+
+    public $donationTypes = [
+        ['label' => 'Sedekah', 'value' => 'Sedekah'],
+        ['label' => 'Infaq', 'value' => 'Infaq'],
+        ['label' => 'Wakaf', 'value' => 'Wakaf'],
+        ['label' => 'Zakat', 'value' => 'Wakaf'],
+        ['label' => 'Lainnya', 'value' => 'Lainnya'],
+    ];
+
     /**
      * Display a listing of the resource.
      */
@@ -188,7 +206,9 @@ class IncomeController extends Controller
         });
 
         return Inertia::render('BoardMember/Income/Create', [
-            'availableAmbassadors' => $availableAmbassadors
+            'availableAmbassadors' => $availableAmbassadors,
+            'paymentMethods' => $this->paymentMethods,
+            'donationTypes' => $this->donationTypes,
         ]);
     }
 
@@ -198,20 +218,18 @@ class IncomeController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'ambassador_name' => 'nullable|string',
-            'transfer_date' => 'required|date|before_or_equal:today',
-            'amount' => 'required|numeric|gt:0',
-            'donor' => 'required|string',
+            'ambassador' => 'required|integer',
+            'transfer_date' => 'required|date',
+            'amount' => 'required|numeric|gt:500',
+            'donor' => 'required|string|min:1',
             'team' => 'nullable|integer',
             'payment_method' => 'required|string',
             'type' => 'required|string',
-            'on_behalf_of' => 'nullable|string',
+            'on_behalf_of' => 'nullable|string|min:1',
         ]);
 
         Income::create([
-            'ambassador_id' => $request->ambassador_name
-                ? Ambassador::firstOrCreate(['name' => $request->ambassador_name])->id
-                : null,
+            'ambassador_id' => $request->ambassador,
             'transfer_date' => $request->transfer_date,
             'amount' => $request->amount,
             'donor' => $request->donor,
@@ -221,7 +239,7 @@ class IncomeController extends Controller
             'on_behalf_of' => $request->on_behalf_of,
         ]);
 
-        return redirect()->route('board_member.incomes.index');
+        return to_route('board_member.incomes.index')->with('message', 'Berhasil menambah pendapatan');
     }
 
     /**
@@ -240,7 +258,9 @@ class IncomeController extends Controller
         return Inertia::render('BoardMember/Income/Edit', [
             'income' => $income,
             'ambassador' => $income->ambassador,
-            'availableAmbassadors' => $availableAmbassadors
+            'availableAmbassadors' => $availableAmbassadors,
+            'paymentMethods' => $this->paymentMethods,
+            'donationTypes' => $this->donationTypes,
         ]);
     }
 
@@ -250,20 +270,18 @@ class IncomeController extends Controller
     public function update(Request $request, Income $income)
     {
         $request->validate([
-            'ambassador_name' => 'nullable|string',
-            'transfer_date' => 'required|date|before_or_equal:today',
-            'amount' => 'required|numeric|gt:0',
-            'donor' => 'required|string',
+            'ambassador' => 'required|integer',
+            'transfer_date' => 'required|date',
+            'amount' => 'required|numeric|gt:500',
+            'donor' => 'required|string|min:1',
             'team' => 'nullable|integer',
             'payment_method' => 'required|string',
             'type' => 'required|string',
-            'on_behalf_of' => 'nullable|string',
+            'on_behalf_of' => 'nullable|string|min:1',
         ]);
 
         $income->update([
-            'ambassador_id' => $request->ambassador_name
-                ? Ambassador::firstOrCreate(['name' => $request->ambassador_name])->id
-                : null,
+            'ambassador_id' => $request->ambassador,
             'transfer_date' => $request->transfer_date,
             'amount' => $request->amount,
             'donor' => $request->donor,
@@ -273,7 +291,7 @@ class IncomeController extends Controller
             'on_behalf_of' => $request->on_behalf_of,
         ]);
 
-        return redirect()->route('board_member.incomes.index');
+        return to_route('board_member.incomes.index')->with('message', 'Berhasil mengubah pendapatan');
     }
 
     /**
@@ -282,7 +300,13 @@ class IncomeController extends Controller
     public function destroy(Income $income)
     {
         $income->delete();
+        return to_route('board_member.incomes.index')->with('message', 'Berhasil menghapus pendapatan');
+    }
 
-        return redirect()->route('board_member.incomes.index');
+    public function destroyMultiple(Request $request): RedirectResponse
+    {
+        $ids = $request->input('ids');
+        Income::whereIn('id', $ids)->delete();
+        return to_route('board_member.incomes.index')->with('message', 'Berhasil menghapus beberapa pendapatan');
     }
 }

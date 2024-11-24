@@ -1,17 +1,16 @@
 <script setup lang="ts">
+import * as zod from 'zod';
 import { Head, Link } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 import { Form, Field, ErrorMessage } from 'vee-validate';
-// import { z } from 'zod';
-import { toFormValidator, toTypedSchema } from '@vee-validate/zod';
-import { onMounted, ref } from 'vue';
+import { toTypedSchema } from '@vee-validate/zod';
+import { onMounted, ref, watch } from 'vue';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/Components/ui/input';
 import { Separator } from '@/Components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/Components/ui/alert-dialog';
-import * as zod from 'zod';
-import { Check, ChevronsUpDown, CornerUpLeftIcon, Save } from 'lucide-vue-next';
+import { AlertCircle, Check, ChevronsUpDown, CornerUpLeftIcon, Loader2, Save } from 'lucide-vue-next';
 import { Popover, PopoverContent, PopoverTrigger } from "@/Components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/Components/ui/command";
 import { reactive } from 'vue';
@@ -19,11 +18,14 @@ import { Inertia } from '@inertiajs/inertia';
 import { useDateFormat } from '@vueuse/core';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
 import { Ambassador, Income } from '@/types';
+import { Alert, AlertDescription, AlertTitle } from '@/Components/ui/alert';
 
 const props = defineProps<{
     income: Income,
     ambassador: Ambassador,
-    availableAmbassadors: { label: string; value: string }[];
+    availableAmbassadors: { label: string; value: number }[];
+    paymentMethods: { label: string; value: string }[];
+    donationTypes: { label: string; value: string }[];
 }>();
 
 // Define variables for ambassador combo box
@@ -33,29 +35,14 @@ const isSubmitting = ref(false);
 const validationSchema = toTypedSchema(
     zod.object({
         transfer_date: zod.string().refine((val) => !isNaN(Date.parse(val)), { message: 'Tanggal donasi wajib diisi' }),
-        ambassador: zod.string().min(2, { message: 'Nama duta minimal 2 karakter' }),
-        donor: zod.string().min(1, { message: 'Nama donatur minimal 2 karakter' }),
-        on_behalf_of: zod.string().min(1, { message: 'Donasi atas nama minimal 2 karakter' }),
+        ambassador: zod.string().min(1, { message: 'Duta wajib dipilih' }),
+        donor: zod.string().min(1, { message: 'Nama donatur minimal 1 karakter' }),
+        on_behalf_of: zod.string().min(1, { message: 'Donasi atas nama minimal 1 karakter' }),
         amount: zod.number().min(3, { message: 'Nominal donasi minimal 3 karakter' }),
         payment_method: zod.string().min(2, { message: 'Metode donasi minimal 2 karakter' }),
         type: zod.string().min(2, { message: 'Tipe donasi minimal 2 karakter' }),
     })
 );
-
-async function onSubmit(values: any) {
-    isSubmitting.value = true;
-    try {
-        console.log(values);
-        // Inertia.post(route('admin.users.store'), values, {
-        //     onFinish: () => {
-        //         isSubmitting.value = false;
-        //     },
-        // });
-        isSubmitting.value = false;
-    } catch (error) {
-        isSubmitting.value = false;
-    }
-}
 
 // Untuk preview data
 const formValues = reactive({
@@ -69,28 +56,52 @@ const formValues = reactive({
 });
 
 function resetForm() {
-    formValues.transfer_date = '';
-    formValues.ambassador = '';
-    formValues.donor = '';
-    formValues.on_behalf_of = '';
-    formValues.amount = 0;
-    formValues.payment_method = '';
-    formValues.type = '';
+    Object.assign(formValues, {
+        transfer_date: '',
+        ambassador: '',
+        donor: '',
+        on_behalf_of: '',
+        amount: 0,
+        payment_method: '',
+        type: '',
+    });
 }
 
 function initializeForm(income: Income, ambassador: Ambassador) {
-    formValues.transfer_date = useDateFormat(income.transfer_date, 'YYYY-MM-DD').value;
-    formValues.ambassador = ambassador.id;
-    formValues.donor = income.donor;
-    formValues.on_behalf_of = income.on_behalf_of;
-    formValues.amount = parseInt(income.amount.toString());
-    formValues.payment_method = income.payment_method;
-    formValues.type = income.type;
+    Object.assign(formValues, {
+        transfer_date: useDateFormat(income.transfer_date, 'YYYY-MM-DD').value,
+        ambassador: ambassador.id.toString(),
+        donor: income.donor,
+        on_behalf_of: income.on_behalf_of,
+        amount: parseInt(income.amount.toString()),
+        payment_method: income.payment_method,
+        type: income.type,
+    });
 }
+
+async function onSubmit(values: any) {
+    isSubmitting.value = true;
+    try {
+        Inertia.put(route('board_member.incomes.update', props.income), {
+            ...values,
+            amount: Number(values.amount),
+            ambassador: Number(values.ambassador),
+        }, {
+            onFinish: () => {
+                isSubmitting.value = false;
+            },
+        });
+    } catch (error) {
+        isSubmitting.value = false;
+    }
+}
+
+watch(() => formValues.ambassador, (newValues) => {
+    formValues.ambassador = newValues.toString();
+}, { deep: true });
 
 onMounted(() => {
     initializeForm(props.income, props.ambassador);
-    console.log(formValues);
 });
 </script>
 
@@ -122,8 +133,23 @@ onMounted(() => {
                     <p class="font-semibold tracking-tight text-lg">Input data</p>
                     <Separator class="my-2 dark:bg-neutral-600" />
 
-                    <Form id="incomeForm" :validation-schema="validationSchema" @submit="onSubmit"
-                        class="grid grid-cols-2 gap-2">
+                    <Form id="editIncomeForm" :validation-schema="validationSchema" @submit="onSubmit"
+                        class="grid grid-cols-2 gap-2" v-slot="{ errors }">
+                        <template v-if="Object.keys(errors).length">
+                            <Alert variant="destructive" class="col-span-2">
+                                <AlertCircle class="w-4 h-4" />
+                                <AlertTitle>Tolong perbaiki data berikut:</AlertTitle>
+                                <AlertDescription>
+                                    <ul>
+                                        <li v-for="(message, field) in errors" :key="field"
+                                            class="list-inside list-disc">
+                                            {{ message }}
+                                        </li>
+                                    </ul>
+                                </AlertDescription>
+                            </Alert>
+                        </template>
+
                         <div>
                             <Label for="transfer_date">Tanggal Transfer</Label>
                             <Field v-model="formValues.transfer_date" name="transfer_date" type="text"
@@ -144,7 +170,7 @@ onMounted(() => {
                                         <Button variant="outline" role="combobox" :aria-expanded="openAmbassador"
                                             class="w-full justify-between">
                                             {{ formValues.ambassador ?
-                                                (availableAmbassadors.find(ambassador => ambassador.value ===
+                                                (availableAmbassadors.find(ambassador => ambassador.value.toString() ===
                                                     formValues.ambassador)?.label) : 'Pilih Duta' }}
                                             <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                         </Button>
@@ -152,7 +178,7 @@ onMounted(() => {
                                     <PopoverContent class="md:w-auto lg:w-[300px] p-0">
                                         <Command v-model="formValues.ambassador">
                                             <CommandInput placeholder="Cari Duta..." :value="formValues.ambassador ?
-                                                (availableAmbassadors.find(ambassador => ambassador.value ===
+                                                (availableAmbassadors.find(ambassador => ambassador.value.toString() ===
                                                     formValues.ambassador)?.label) : '-'" />
                                             <CommandEmpty>Tidak ada duta ditemukan.</CommandEmpty>
                                             <CommandList>
@@ -163,7 +189,7 @@ onMounted(() => {
                                                         class="overflow-hidden text-ellipsis">
                                                         <Check :class="[
                                                             'mr-2 h-4 w-4',
-                                                            formValues.ambassador === ambassador.value ? 'opacity-100' : 'opacity-0',
+                                                            formValues.ambassador === ambassador.value.toString() ? 'opacity-100' : 'opacity-0',
                                                         ]" />
                                                         {{ ambassador.label }}
                                                     </CommandItem>
@@ -212,17 +238,15 @@ onMounted(() => {
                             <Field v-model="formValues.payment_method" name="payment_method" type="select"
                                 :rules="{ required: true }">
                                 <template v-slot="{ field }">
-                                    <Select v-bind="field">
+                                    <Select v-bind="field" v-model="formValues.payment_method"
+                                        @update:model-value="formValues.payment_method = $event">
                                         <SelectTrigger>
                                             <SelectValue
                                                 :placeholder="formValues.payment_method || 'Pilih Tipe Pemayaran'" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="bca">BCA</SelectItem>
-                                            <SelectItem value="bni">BNI</SelectItem>
-                                            <SelectItem value="bri">BRI</SelectItem>
-                                            <SelectItem value="mandiri">Mandiri</SelectItem>
-                                            <SelectItem value="lainnya">Lainnya</SelectItem>
+                                            <SelectItem v-for="method in paymentMethods" :key="method.value"
+                                                :value="method.value">{{ method.label }}</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </template>
@@ -234,15 +258,14 @@ onMounted(() => {
                             <Label for="type">Tipe Donasi</Label>
                             <Field v-model="formValues.type" name="type" type="select" :rules="{ required: true }">
                                 <template v-slot="{ field }">
-                                    <Select v-bind="field">
+                                    <Select v-bind="field" v-model="formValues.type"
+                                        @update:model-value="formValues.type = $event">
                                         <SelectTrigger>
                                             <SelectValue :placeholder="formValues.type || 'Pilih Tipe Donasi'" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="sedekah">Sedekah</SelectItem>
-                                            <SelectItem value="infaq">Infaq</SelectItem>
-                                            <SelectItem value="wakaf">Wakaf</SelectItem>
-                                            <SelectItem value="lainnya">Lainnya</SelectItem>
+                                            <SelectItem v-for="type in donationTypes" :key="type.value"
+                                                :value="type.value">{{ type.label }}</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </template>
@@ -289,7 +312,7 @@ onMounted(() => {
                                         <p
                                             class="font-semibold text-sm tracking-tight text-neutral-600 dark:text-neutral-400 -mb-1">
                                             Metode Donasi</p>
-                                        <p class="uppercase">{{ formValues.payment_method || '-' }}</p>
+                                        <p>{{ formValues.payment_method || '-' }}</p>
                                     </div>
                                     <div>
                                         <p
@@ -306,10 +329,10 @@ onMounted(() => {
 
                         <div class="col-span-2 flex gap-2 justify-end w-full">
                             <Button variant="outline" type="reset" @click="resetForm"
-                                :disabled="isSubmitting">Batal</Button>
+                                :disabled="isSubmitting">Reset</Button>
                             <AlertDialog>
                                 <AlertDialogTrigger as-child>
-                                    <Button>
+                                    <Button type="button" :disabled="isSubmitting">
                                         <template v-if="isSubmitting">
                                             <Loader2 class="w-4 h-4 mr-2 animate-spin" />
                                             Menyimpan...
@@ -330,7 +353,7 @@ onMounted(() => {
                                     <AlertDialogFooter>
                                         <AlertDialogCancel>Batal</AlertDialogCancel>
                                         <AlertDialogAction as-child>
-                                            <Button type="submit" form="incomeForm">Ya, Simpan</Button>
+                                            <Button type="submit" form="editIncomeForm">Ya, Simpan</Button>
                                         </AlertDialogAction>
                                     </AlertDialogFooter>
                                 </AlertDialogContent>
@@ -355,7 +378,7 @@ onMounted(() => {
                                     class="font-semibold text-sm tracking-tight text-neutral-600 dark:text-neutral-400 -mb-1">
                                     Nama Duta</p>
                                 <p class="first-letter:uppercase">{{ formValues.ambassador ?
-                                    (availableAmbassadors.find(ambassador => ambassador.value ===
+                                    (availableAmbassadors.find(ambassador => ambassador.value.toString() ===
                                         formValues.ambassador)?.label) : '-' }}</p>
                             </div>
                             <div>
@@ -380,7 +403,7 @@ onMounted(() => {
                                 <p
                                     class="font-semibold text-sm tracking-tight text-neutral-600 dark:text-neutral-400 -mb-1">
                                     Metode Donasi</p>
-                                <p class="uppercase">{{ formValues.payment_method || '-' }}</p>
+                                <p>{{ formValues.payment_method || '-' }}</p>
                             </div>
                             <div>
                                 <p

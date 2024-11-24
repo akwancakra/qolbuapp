@@ -147,6 +147,7 @@ Route::middleware(['auth', 'role:pengurus'])->prefix('bm')->group(function () {
         'update' => 'board_member.beneficiaries.update',
         'destroy' => 'board_member.beneficiaries.destroy',
     ]);
+    Route::post('/beneficiaries/destroy-multiple', [BoardMemberBeneficiaryController::class, 'destroyMultiple'])->name('board_member.beneficiaries.destroy-multiple');
 
     Route::resource('incomes', BoardMemberIncomeController::class)
         ->except('show')
@@ -158,6 +159,7 @@ Route::middleware(['auth', 'role:pengurus'])->prefix('bm')->group(function () {
             'update' => 'board_member.incomes.update',
             'destroy' => 'board_member.incomes.destroy',
         ]);
+    Route::post('/incomes/destroy-multiple', [BoardMemberIncomeController::class, 'destroyMultiple'])->name('board_member.incomes.destroy-multiple');
 });
 // By Bill END
 

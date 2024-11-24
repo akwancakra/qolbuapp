@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Pagination, PaginationList, PaginationListItem } from "@/Components/ui/pagination";
+import { Pagination, PaginationList } from "@/Components/ui/pagination";
 import { Button } from "@/Components/ui/button";
 import { computed, ref } from "vue";
 import { PaginationTemplate } from "@/types";

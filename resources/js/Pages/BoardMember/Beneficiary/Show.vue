@@ -10,13 +10,26 @@ import { Beneficiary } from '@/types';
 import { ref } from 'vue';
 import { useDateFormat } from '@vueuse/core';
 import { AspectRatio } from '@/Components/ui/aspect-ratio';
+import { Inertia } from '@inertiajs/inertia';
+import { toast } from 'vue-sonner';
 
-const props = defineProps<{
+defineProps<{
     beneficiary: Beneficiary
 }>();
 
 const clientLocale = ref(navigator.language || 'en-US');
 
+const deleteBeneficiary = (nik: string) => {
+    Inertia.delete(route('board_member.beneficiaries.destroy', nik), {
+        onSuccess: () => {
+            toast.success("Berhasil menghapus data penerima manfaat");
+        },
+        onError: (errors) => {
+            toast.error(errors);
+            console.error("Error saat menghapus data:", errors);
+        },
+    });
+};
 </script>
 
 <template>
@@ -31,7 +44,7 @@ const clientLocale = ref(navigator.language || 'en-US');
         </template>
 
         <Button class="mb-3" variant="outline">
-            <Link :href="route('pengurus.beneficiaries.index')" class="flex gap-1">
+            <Link :href="route('board_member.beneficiaries.index')" class="flex gap-1">
             <CornerUpLeftIcon :size="18" /> Kembali
             </Link>
         </Button>
@@ -51,7 +64,7 @@ const clientLocale = ref(navigator.language || 'en-US');
                         <DropdownMenuSeparator />
                         <DropdownMenuGroup>
                             <DropdownMenuItem as-child>
-                                <Link :href="route('pengurus.beneficiaries.edit', beneficiary.id)"
+                                <Link :href="route('board_member.beneficiaries.edit', beneficiary.nik)"
                                     class="cursor-pointer flex gap-1">
                                 <PencilIcon :size="18" /> Ubah
                                 </Link>
@@ -74,7 +87,11 @@ const clientLocale = ref(navigator.language || 'en-US');
                                         </AlertDialogHeader>
                                         <AlertDialogFooter>
                                             <AlertDialogCancel>Batal</AlertDialogCancel>
-                                            <AlertDialogAction>Ya, Hapus
+                                            <AlertDialogAction as-child>
+                                                <Button variant="destructive"
+                                                    class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                                    @click="deleteBeneficiary(beneficiary.nik)">Ya,
+                                                    Hapus</Button>
                                             </AlertDialogAction>
                                         </AlertDialogFooter>
                                     </AlertDialogContent>
@@ -92,51 +109,61 @@ const clientLocale = ref(navigator.language || 'en-US');
 
                 <div class="max-w-[250px] lg:max-w-[300px]">
                     <AspectRatio :ratio="6 / 7">
-                        <img :src="`/storage/images/beneficiaries/${beneficiary.photo}`" alt="Image"
+                        <img :src="`/storage/images/beneficiaries/${beneficiary?.photo}`" alt="Image"
                             class="rounded-md object-cover w-full h-full" draggable="false">
                     </AspectRatio>
                 </div>
 
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 my-3">
                     <div>
+                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">NIK</p>
+                        <p>{{ beneficiary.nik }}</p>
+                    </div>
+                    <div>
                         <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Nama</p>
                         <p>{{ beneficiary.name }}</p>
                     </div>
                     <div>
-                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Nama Panggilan</p>
-                        <p>{{ beneficiary.nickname }}</p>
+                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Jenis Kelamin</p>
+                        <p>{{ beneficiary.gender === 'male' ? 'Laki-laki' : 'Perempuan' }}</p>
+                    </div>
+                    <div>
+                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Tempat Lahir</p>
+                        <p>{{ beneficiary.place_of_birth }}</p>
                     </div>
                     <div>
                         <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Tanggal Lahir</p>
-                        <p>{{ useDateFormat(beneficiary.birthdate, 'DD MMM YYYY', {
+                        <p>{{ useDateFormat(beneficiary.date_of_birth, 'DD MMM YYYY', {
                             locales:
                                 clientLocale
                         }) }}</p>
                     </div>
                     <div>
-                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Kota</p>
-                        <p>{{ beneficiary.city }}</p>
+                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">RT/RW</p>
+                        <p>{{ beneficiary.neighborhood_unit }}</p>
                     </div>
                     <div>
-                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Provinsi</p>
-                        <p>{{ beneficiary.province }}</p>
+                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Ukuran Baju</p>
+                        <p>{{ beneficiary.shirt_size }}</p>
                     </div>
                     <div>
-                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Negara</p>
-                        <p>{{ beneficiary.country }}</p>
+                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Ukuran Sepatu</p>
+                        <p>{{ beneficiary.shoe_size }}</p>
                     </div>
                     <div>
-                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Kode Pos</p>
-                        <p>{{ beneficiary.postal_code }}</p>
+                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Pendidikan
+                            Terakhir</p>
+                        <p>{{ beneficiary.last_education }}, Kelas {{ beneficiary.school_grade }}</p>
                     </div>
                     <div>
-                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">No Handphone</p>
-                        <p>{{ beneficiary.phone }}</p>
+                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Status</p>
+                        <p>{{ beneficiary.status }}</p>
                     </div>
-                    <div>
-                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Email</p>
-                        <p>{{ beneficiary.email }}</p>
-                    </div>
+                </div>
+
+                <div>
+                    <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Keterangan</p>
+                    <p>{{ beneficiary.description }}</p>
                 </div>
             </div>
 
@@ -147,11 +174,25 @@ const clientLocale = ref(navigator.language || 'en-US');
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 my-3">
                     <div>
                         <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Ayah</p>
-                        <p>{{ beneficiary.parent_father }}</p>
+                        <p>{{ beneficiary.father }}</p>
+                    </div>
+                    <div>
+                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Akta Kematian Ayah
+                        </p>
+                        <p>{{ beneficiary.father_death_certificate_number }}</p>
                     </div>
                     <div>
                         <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Ibu</p>
-                        <p>{{ beneficiary.parent_mother }}</p>
+                        <p>{{ beneficiary.mother }}</p>
+                    </div>
+                    <div>
+                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Akta Kematian Ibu
+                        </p>
+                        <p>{{ beneficiary.mother_death_certificate_number }}</p>
+                    </div>
+                    <div>
+                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">No. Telp</p>
+                        <p>{{ beneficiary.phone_number }}</p>
                     </div>
                 </div>
             </div>

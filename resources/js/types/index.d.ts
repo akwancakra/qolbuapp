@@ -33,22 +33,23 @@ export type Ambassador = {
 };
 
 export type Beneficiary = {
-    id: number;
+    nik: string;
+    place_of_birth: string;
+    date_of_birth: string;
     name: string;
-    nickname?: string;
-    birthdate?: string;
-    address?: string;
-    city?: string;
-    province?: string;
-    country?: string;
-    postal_code?: string;
-    photo?: string;
-    phone?: string;
-    email?: string;
-    parent_mother?: string;
-    parent_mother_phone?: string;
-    parent_father?: string;
-    parent_father_phone?: string;
+    neighborhood_unit?: string;
+    gender: string;
+    last_education?: string;
+    school_grade?: string;
+    father?: string;
+    mother?: string;
+    shirt_size?: string;
+    shoe_size?: string;
+    father_death_certificate_number?: string;
+    mother_death_certificate_number?: string;
+    phone_number?: string;
+    status?: string;
+    description?: string;
     created_at: string;
     updated_at: string;
 };
@@ -76,6 +77,26 @@ export type PaginatedUsers = {
 export type PaginatedIncomes = {
     current_page: number;
     data: Income[];
+    first_page_url: string;
+    from: number;
+    last_page: number;
+    last_page_url: string;
+    links: Array<{
+        url: string | null;
+        label: string;
+        active: boolean;
+    }>;
+    next_page_url: string | null;
+    path: string;
+    per_page: number;
+    prev_page_url: string | null;
+    to: number;
+    total: number;
+};
+
+export type PaginatedBeneficiaries = {
+    current_page: number;
+    data: Beneficiary[];
     first_page_url: string;
     from: number;
     last_page: number;

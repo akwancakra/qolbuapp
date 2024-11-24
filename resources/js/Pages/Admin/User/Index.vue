@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { defineProps, ref, computed, watch } from 'vue';
-import { Link, useForm } from '@inertiajs/vue3';
+import { Link, useForm, usePage } from '@inertiajs/vue3';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
@@ -40,8 +40,11 @@ import { Checkbox } from '@/Components/ui/checkbox';
 import { PaginatedUsers } from '@/types';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 import { Inertia } from '@inertiajs/inertia';
+import { toast } from 'vue-sonner';
+import { onMounted } from 'vue';
 
-const props = defineProps<{
+const page = usePage();
+defineProps<{
     users: PaginatedUsers; // props users yang berisi array dari User
     filters: {
         search: string,
@@ -65,7 +68,15 @@ const toggleCheckbox = (checked: boolean, id: number) => {
 };
 
 const deleteUser = (id: number) => {
-    Inertia.delete(route('admin.users.destroy', id));
+    Inertia.delete(route('admin.users.destroy', id), {
+        onSuccess: () => {
+            toast.success("Berhasil menghapus akun");
+        },
+        onError: (errors) => {
+            toast.error(errors);
+            console.error("Error saat menghapus akun:", errors);
+        },
+    });
 };
 
 // Function untuk menghapus user yang dipilih
@@ -76,7 +87,12 @@ const deleteSelectedUsers = () => {
         preserveState: true,
         onSuccess: () => {
             selectedUsers.value = [];
-        }
+            toast.success("Berhasil menghapus beberapa akun");
+        },
+        onError: (errors) => {
+            toast.error(errors);
+            console.error("Error saat menghapus beberapa akun:", errors);
+        },
     });
 };
 
@@ -93,6 +109,12 @@ watch(() => form.data(), (newData) => {
     form.role = newData.role;
 });
 
+onMounted(() => {
+    const flashMessage = (page.props.flash as { message?: string })?.message;
+    if (flashMessage) {
+        toast.success(flashMessage);
+    }
+});
 </script>
 
 <template>

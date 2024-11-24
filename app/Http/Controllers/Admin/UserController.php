@@ -7,7 +7,6 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -66,7 +65,7 @@ class UserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        return Redirect::route('admin.users.index');
+        return to_route('admin.users.index')->with('message', 'Berhasil menambah akun');
     }
 
     public function edit(User $user): Response
@@ -90,19 +89,19 @@ class UserController extends Controller
             'role' => $request->role,
         ]);
 
-        return Redirect::route('admin.users.index');
+        return to_route('admin.users.index')->with('message', 'Berhasil mengubah akun');
     }
 
     public function destroy(User $user): RedirectResponse
     {
         $user->delete();
-        return Redirect::route('admin.users.index');
+        return to_route('admin.users.index')->with('message', 'Berhasil menghapus akun');
     }
 
     public function destroyMultiple(Request $request): RedirectResponse
     {
         $ids = $request->input('ids');
         User::whereIn('id', $ids)->delete();
-        return redirect()->route('admin.users.index');
+        return to_route('admin.users.index')->with('message', 'Berhasil menghapus beberapa akun');
     }
 }

@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import { Head, Link } from '@inertiajs/vue3'
+import { computed, onMounted, ref, watch, watchEffect } from 'vue';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3'
 import { Label } from '@/Components/ui/label';
 import { Input } from '@/Components/ui/input';
-import { Beneficiary } from '@/types';
+import { Beneficiary, PaginatedBeneficiaries } from '@/types';
 import { Button } from '@/Components/ui/button';
 import {
     Table,
@@ -46,56 +46,165 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from '@/Components/ui/alert-dialog';
-import { BookUserIcon, DownloadIcon, EllipsisIcon, FilePlusIcon, FileTextIcon, ImageIcon, PencilIcon, SheetIcon, Trash2Icon } from 'lucide-vue-next';
+import { AlertCircle, BookUserIcon, DownloadIcon, EllipsisIcon, FilePlusIcon, FileTextIcon, ImageIcon, PencilIcon, Search, SheetIcon, Trash2Icon } from 'lucide-vue-next';
 import { Checkbox } from '@/Components/ui/checkbox';
 import { useDateFormat } from '@vueuse/core';
 // LOCAL CODE
 import DashboardLayout from '@/Layouts/DashboardLayout.vue'
+import PaginationComponent from '../Income/_components/PaginationComponent.vue';
+import FilterBeneficiary from './_components/FilterBeneficiary.vue';
+import { Alert, AlertDescription, AlertTitle } from '@/Components/ui/alert';
+import { Inertia } from '@inertiajs/inertia';
+import { toast } from 'vue-sonner';
 
+const page = usePage();
 const props = defineProps<{
-    beneficiaries: Beneficiary[];
+    beneficiaries: PaginatedBeneficiaries;
+    educationList: { label: string; value: string }[];
+    statusList: { label: string; value: string }[];
+    filters: {
+        name: string;
+        min_age: number;
+        max_age: number;
+        education: string;
+        school_grade: string;
+        shirt_size: string;
+        shoe_size: number;
+        gender: string;
+        status: string;
+        sort_by: string;
+        sort_direction: string;
+    }
 }>();
 
+// ========== SEARCHING AND FIILTERING ==========
+const form = useForm({
+    name: '',
+    min_age: 0,
+    max_age: 0,
+    education: 'default',
+    school_grade: '',
+    shirt_size: 'default',
+    shoe_size: 0,
+    gender: 'default',
+    status: 'default',
+    sort_by: 'created_at',
+    sort_direction: 'desc',
+});
+
+const handleApplyFilter = (filters: any) => {
+    console.log('Filters applied in parent:', filters);
+
+    // Update form values with filters
+    Object.assign(form, filters);
+
+    // Fetch data with new filters
+    form.get(route('board_member.beneficiaries.index'), {
+        preserveState: true,
+        data: form.data(),
+        onError: (errors) => {
+            form.errors = errors;
+        },
+    });
+};
+
+// CODE FOR SEARCHING AND FIILTERING
+watch(() => form.data(), (newData) => {
+    form.get(route('board_member.beneficiaries.index'), {
+        preserveState: true,
+        data: newData,
+        onError: (errors) => {
+            form.errors = errors;
+        },
+    });
+});
+
+onMounted(() => {
+    form.name = props.filters.name;
+    form.min_age = props.filters.min_age;
+    form.max_age = props.filters.max_age;
+    form.education = props.filters.education;
+    form.school_grade = props.filters.school_grade;
+    form.shirt_size = props.filters.shirt_size;
+    form.shoe_size = props.filters.shoe_size;
+    form.gender = props.filters.gender;
+    form.status = props.filters.status;
+    form.sort_by = props.filters.sort_by;
+    form.sort_direction = props.filters.sort_direction;
+
+    const flashMessage = (page.props.flash as { message?: string })?.message;
+    if (flashMessage) {
+        toast.success(flashMessage);
+    }
+});
+
 // ========== DATA TABLE SECTION ==========
+const dropdownOpen = ref(false);
 // State untuk melacak checkbox yang dipilih
-const selectedBeneficiaries = ref<number[]>([]);
+const selectedBeneficiaries = ref<string[]>([]);
 const clientLocale = ref(navigator.language || 'en-US');
 
 // Computed property untuk menghitung jumlah akun yang dipilih
 const selectedCount = computed(() => selectedBeneficiaries.value.length);
 
 // Function untuk toggle checkbox
-const toggleCheckbox = (checked: boolean, id: number) => {
+const toggleCheckbox = (checked: boolean, nik: string) => {
     if (checked) {
-        selectedBeneficiaries.value.push(id);
+        selectedBeneficiaries.value.push(nik);
     } else {
-        selectedBeneficiaries.value = selectedBeneficiaries.value.filter(userId => userId !== id);
+        selectedBeneficiaries.value = selectedBeneficiaries.value.filter(childNIK => childNIK !== nik);
     }
 };
 
-const deleteBeneficiary = (id: number) => {
-    console.log("Delete beneficiary with id: " + id);
+const deleteBeneficiary = (nik: string) => {
+    Inertia.delete(route('board_member.beneficiaries.destroy', nik), {
+        onSuccess: () => {
+            toast.success("Berhasil menghapus data penerima manfaat");
+        },
+        onError: (errors) => {
+            toast.error(errors);
+            console.error("Error saat menghapus data:", errors);
+            // alert("Gagal menghapus data!");
+        },
+    });
 };
 
-// Function untuk menghapus user yang dipilih
+// Function untuk menghapus beneficiary yang dipilih
 const deleteSelectedBeneficiaries = () => {
-    console.log("Delete beneficiaries with ids: " + selectedBeneficiaries.value.join(", "));
-    // Implement the actual deletion logic here
-    // After deletion, clear the selection
-    selectedBeneficiaries.value = [];
+    dropdownOpen.value = false;
+    // console.log("Delete beneficiaries with niks: " + selectedBeneficiaries.value.join(", "));
+    Inertia.post(route('board_member.beneficiaries.destroy-multiple'), {
+        niks: selectedBeneficiaries.value
+    }, {
+        preserveState: true,
+        onSuccess: () => {
+            selectedBeneficiaries.value = [];
+            toast.success("Berhasil menghapus beberapa pendapatan");
+        },
+        onError: (errors) => {
+            toast.error(errors);
+            console.error("Error saat menghapus beberapa pendapatan:", errors);
+        },
+    });
 };
 
 // Function untuk export beneficiaries
 const exportTransactions = () => {
     const beneficiariesToExport = selectedBeneficiaries.value.length > 0
         ? selectedBeneficiaries.value
-        : props.beneficiaries.map(beneficiary => beneficiary.id);
+        : props.beneficiaries.data.map(beneficiary => beneficiary.nik);
     // : props.transactions.data.map(transaction => transaction.id);
 
     console.log("Exporting beneficiaries with ids: ", beneficiariesToExport);
     selectedBeneficiaries.value = [];
 };
 
+// CODE FOR PAGINATION
+const handlePageChange = (newPage: number) => {
+    form.get(route('board_member.beneficiaries.index', { page: newPage }), {
+        preserveState: true,
+    });
+};
 </script>
 
 <template>
@@ -119,66 +228,36 @@ const exportTransactions = () => {
                 </div>
             </div>
 
-            <div class="grid gap-3 grid-cols-2 sm:grid-cols-4">
-                <div>
+            <div class="flex items-end gap-2">
+                <div class="flex-1 md:flex-none">
                     <Label for="name">Nama Anak</Label>
-                    <Input type="text" id="name" placeholder="Cari nama..." />
+                    <div class="relative">
+                        <Search class="absolute left-2 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input id="name" class="pl-8 w-full md:w-[300px]" v-model="form.name"
+                            placeholder="Cari nama..." />
+                    </div>
                 </div>
-                <div>
-                    <Label for="age">Usia</Label>
-                    <Select id="age">
-                        <SelectTrigger>
-                            <SelectValue placeholder="Pilih Usia" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectGroup>
-                                <SelectItem value="default">Semua</SelectItem>
-                                <SelectItem value="one">4-8 Tahun</SelectItem>
-                                <SelectItem value="two">9-11 Tahun</SelectItem>
-                                <SelectItem value="three">12-15 Tahun</SelectItem>
-                                <SelectItem value="four">16-18 Tahun</SelectItem>
-                                <SelectItem value="five">19-21 Tahun</SelectItem>
-                                <SelectItem value="other">>21 Tahun</SelectItem>
-                            </SelectGroup>
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div>
-                    <Label for="education">Pendidikan</Label>
-                    <Select id="education">
-                        <SelectTrigger>
-                            <SelectValue placeholder="Pilih Pendidikan" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectGroup>
-                                <SelectItem value="default">Semua</SelectItem>
-                                <SelectItem value="tk">TK (Taman Kanak-kanak)</SelectItem>
-                                <SelectItem value="sd">SD (Sekolah Dasar)</SelectItem>
-                                <SelectItem value="smp">SMP (Sekolah Menengah Pertama)</SelectItem>
-                                <SelectItem value="sma">SMA (Sekolah Menengah Atas)</SelectItem>
-                                <SelectItem value="university">Universitas</SelectItem>
-                            </SelectGroup>
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div>
-                    <Label for="status">Status</Label>
-                    <Select id="status">
-                        <SelectTrigger>
-                            <SelectValue placeholder="Pilih Status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectGroup>
-                                <SelectItem value="default">Semua</SelectItem>
-                                <SelectItem value="partherless">Yatim</SelectItem>
-                                <SelectItem value="motherless">Piatu</SelectItem>
-                                <SelectItem value="orphan">Yatim Piatu</SelectItem>
-                            </SelectGroup>
-                        </SelectContent>
-                    </Select>
-                </div>
+
+                <FilterBeneficiary :educationList="educationList" :statusList="statusList"
+                    @apply-filter="handleApplyFilter" :filters="filters" />
             </div>
         </section>
+
+        <template v-if="Object.keys(form.errors).length > 0">
+            <section class="bg-white p-3 rounded-lg mb-3 dark:bg-neutral-800">
+                <Alert variant="destructive" class="col-span-2">
+                    <AlertCircle class="w-4 h-4" />
+                    <AlertTitle>Data yang dikirim terdapat kesalahan:</AlertTitle>
+                    <AlertDescription>
+                        <ul class="list-inside list-disc">
+                            <li v-for="(message, field) in form.errors" :key="field">
+                                {{ message }}
+                            </li>
+                        </ul>
+                    </AlertDescription>
+                </Alert>
+            </section>
+        </template>
 
         <section class="bg-white p-3 rounded-lg mb-3 dark:bg-neutral-800">
             <div class="mb-3 flex items-center justify-between">
@@ -190,7 +269,7 @@ const exportTransactions = () => {
                     Data Penerima Manfaat
                 </p>
                 <div class="flex gap-2">
-                    <DropdownMenu>
+                    <DropdownMenu :open="dropdownOpen" @update:open="dropdownOpen = $event">
                         <DropdownMenuTrigger as-child>
                             <Button variant="outline" class="gap-2">
                                 <p>Menu</p>
@@ -202,7 +281,7 @@ const exportTransactions = () => {
                             <DropdownMenuSeparator />
                             <DropdownMenuGroup>
                                 <DropdownMenuItem>
-                                    <Link :href="route('pengurus.beneficiaries.create')"
+                                    <Link :href="route('board_member.beneficiaries.create')"
                                         class="flex items-center gap-1">
                                     <FilePlusIcon :size="18" />
                                     <p>Tambah penerima manfaat</p>
@@ -245,7 +324,12 @@ const exportTransactions = () => {
                                             </AlertDialogHeader>
                                             <AlertDialogFooter>
                                                 <AlertDialogCancel>Batal</AlertDialogCancel>
-                                                <AlertDialogAction @click="deleteSelectedBeneficiaries">Ya, Hapus
+                                                <AlertDialogAction as-child>
+                                                    <Button variant="destructive"
+                                                        class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                                        @click="deleteSelectedBeneficiaries">Ya,
+                                                        Hapus
+                                                    </Button>
                                                 </AlertDialogAction>
                                             </AlertDialogFooter>
                                         </AlertDialogContent>
@@ -259,7 +343,7 @@ const exportTransactions = () => {
 
             <div>
                 <Table>
-                    <TableCaption>List dari data penerima manfaat Qolbu App.</TableCaption>
+                    <TableCaption class="mb-3">List dari data penerima manfaat Qolbu App.</TableCaption>
                     <TableHeader>
                         <TableRow>
                             <TableHead></TableHead>
@@ -273,33 +357,44 @@ const exportTransactions = () => {
                             <TableHead class="min-w-[120px]">Ayah</TableHead>
                             <TableHead class="min-w-[120px]">Ibu</TableHead>
                             <TableHead>No. Telp</TableHead>
-                            <TableHead>No. Akte Kematian</TableHead>
-                            <TableHead>Keterangan</TableHead>
+                            <TableHead>Status</TableHead>
                             <TableHead>Aksi</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        <TableRow v-for="(beneficiary, index) in beneficiaries" :key="index">
+                        <!-- IF DATA IS EMPTY -->
+                        <TableRow v-if="beneficiaries.data.length === 0">
+                            <TableCell class="p-3" :colspan="12">
+                                <p class="text-center text-neutral-500 dark:text-neutral-400">
+                                    Tidak ada data penerima manfaat yang ditemukan.
+                                </p>
+                            </TableCell>
+                        </TableRow>
+                        <!-- IF DATA IS EXIST -->
+                        <TableRow v-else v-for="(beneficiary, index) in beneficiaries.data" :key="index">
                             <TableCell class="p-3">
-                                <Checkbox :id="`transaction-${beneficiary.id}`"
-                                    :checked="selectedBeneficiaries.includes(beneficiary.id)"
-                                    @update:checked="(checked) => toggleCheckbox(checked, beneficiary.id)" />
+                                <Checkbox :id="`transaction-${beneficiary.nik}`"
+                                    :checked="selectedBeneficiaries.includes(beneficiary.nik)"
+                                    @update:checked="(checked) => toggleCheckbox(checked, beneficiary.nik)" />
                             </TableCell>
                             <TableCell>{{ index + 1 }}</TableCell>
-                            <TableCell>317219138129</TableCell>
+                            <TableCell>{{ beneficiary.nik }}</TableCell>
                             <TableCell>{{ beneficiary.name }}</TableCell>
-                            <TableCell>003/001 Sukup Latest</TableCell>
-                            <TableCell>Laki-laki</TableCell>
-                            <TableCell>Bandung, {{ useDateFormat(beneficiary.birthdate, 'DD MMM YYYY', {
-                                locales:
-                                    clientLocale
-                            }) }}</TableCell>
-                            <TableCell>SD</TableCell>
-                            <TableCell>{{ beneficiary.parent_father }}</TableCell>
-                            <TableCell>{{ beneficiary.parent_mother }}</TableCell>
-                            <TableCell>087789892020</TableCell>
-                            <TableCell>AK/29/TOT/KENT</TableCell>
-                            <TableCell>Y-Team</TableCell>
+                            <TableCell>{{ beneficiary.neighborhood_unit }}</TableCell>
+                            <TableCell>{{ beneficiary.gender === 'male' ? 'Laki-laki' : 'Perempuan' }}</TableCell>
+                            <TableCell>
+                                {{ beneficiary.place_of_birth }},
+                                {{ useDateFormat(beneficiary.date_of_birth, 'DD MMM YYYY', {
+                                    locales:
+                                        clientLocale
+                                }) }}
+                            </TableCell>
+                            <TableCell>{{ beneficiary.last_education }}, Kelas {{ beneficiary.school_grade }}
+                            </TableCell>
+                            <TableCell>{{ beneficiary.father }}</TableCell>
+                            <TableCell>{{ beneficiary.mother }}</TableCell>
+                            <TableCell>{{ beneficiary.phone_number }}</TableCell>
+                            <TableCell>{{ beneficiary.status }}</TableCell>
                             <TableCell class="p-3">
                                 <DropdownMenu>
                                     <DropdownMenuTrigger as-child>
@@ -311,13 +406,13 @@ const exportTransactions = () => {
                                         <DropdownMenuLabel>Aksi</DropdownMenuLabel>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem as-child>
-                                            <Link :href="route('pengurus.beneficiaries.show', beneficiary.id)"
+                                            <Link :href="route('board_member.beneficiaries.show', beneficiary.nik)"
                                                 class="cursor-pointer flex gap-1">
                                             <BookUserIcon :size="18" /> Detail
                                             </Link>
                                         </DropdownMenuItem>
                                         <DropdownMenuItem as-child>
-                                            <Link :href="route('pengurus.beneficiaries.edit', beneficiary.id)"
+                                            <Link :href="route('board_member.beneficiaries.edit', beneficiary.nik)"
                                                 class="cursor-pointer flex gap-1">
                                             <PencilIcon :size="18" /> Ubah
                                             </Link>
@@ -343,7 +438,7 @@ const exportTransactions = () => {
                                                         <AlertDialogAction as-child>
                                                             <Button variant="destructive"
                                                                 class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                                                @click="deleteBeneficiary(beneficiary.id)">Ya,
+                                                                @click="deleteBeneficiary(beneficiary.nik)">Ya,
                                                                 Hapus</Button>
                                                         </AlertDialogAction>
                                                     </AlertDialogFooter>
@@ -357,25 +452,7 @@ const exportTransactions = () => {
                     </TableBody>
                 </Table>
 
-                <!-- <Pagination v-slot="{ page }" :total="transactions.total" :sibling-count="1" show-edges
-                    :default-page="transactions.current_page">
-                    <PaginationList v-slot="{ items }" class="flex items-center gap-1">
-                        <PaginationFirst />
-                        <PaginationPrev />
-
-                        <template v-for="(item, index) in items">
-                            <PaginationListItem v-if="item.type === 'page'" :key="index" :value="item.value" as-child>
-                                <Button class="w-10 h-10 p-0" :variant="item.value === page ? 'default' : 'outline'">
-                                    {{ item.value }}
-                                </Button>
-                            </PaginationListItem>
-                            <PaginationEllipsisIcon v-else :key="item.type" :index="index" />
-                        </template>
-
-                        <PaginationNext />
-                        <PaginationLast />
-                    </PaginationList>
-                </Pagination> -->
+                <PaginationComponent :pagination="props.beneficiaries" @page-change="handlePageChange" />
             </div>
         </section>
     </DashboardLayout>

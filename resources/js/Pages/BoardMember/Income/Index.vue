@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { defineProps, ref, computed, watch, Ref, onMounted } from "vue";
-import { Link, useForm, Head } from "@inertiajs/vue3";
+import { Link, useForm, Head, usePage } from "@inertiajs/vue3";
 import { Button } from "@/Components/ui/button";
-import { Input } from "@/Components/ui/input";
 import { Label } from "@/Components/ui/label";
 import {
     Table,
@@ -56,6 +55,7 @@ import {
     FilePlusIcon,
     ChevronsUpDown,
     Check,
+    Loader2,
 } from "lucide-vue-next";
 import { BarChart } from "@/Components/ui/chart-bar";
 import { Checkbox } from "@/Components/ui/checkbox";
@@ -73,8 +73,10 @@ import PaginationComponent from "./_components/PaginationComponent.vue";
 import RangeCalendarIncome from "./_components/RangeCalendarIncome.vue";
 import { Popover, PopoverContent, PopoverTrigger } from "@/Components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/Components/ui/command";
-// import { differenceInDays } from "date-fns";
+import { Inertia } from "@inertiajs/inertia";
+import { toast } from "vue-sonner";
 
+const page = usePage();
 const props = defineProps<{
     incomes: PaginatedIncomes;
     availableTeamCodes: string[];
@@ -145,6 +147,11 @@ onMounted(() => {
     form.week = props.filters.week;
     form.month = props.filters.month;
     form.year = props.filters.year;
+
+    const flashMessage = (page.props.flash as { message?: string })?.message;
+    if (flashMessage) {
+        toast.success(flashMessage);
+    }
 });
 
 watch(() => value.value, (newValue) => {
@@ -181,15 +188,32 @@ const toggleCheckbox = (checked: boolean, id: number) => {
 };
 
 const deleteIncome = (id: number) => {
-    console.log("Delete income with id: " + id);
+    Inertia.delete(route('board_member.incomes.destroy', id), {
+        onSuccess: () => {
+            toast.success("Berhasil menghapus pendapatan");
+        },
+        onError: (errors) => {
+            toast.error(errors);
+            console.error("Error saat menghapus pendapatan:", errors);
+        },
+    });
 };
 
+// Function untuk menghapus income yang dipilih
 const deleteSelectedIncomes = () => {
-    console.log(
-        "Delete incomes with ids: " + selectedIncomes.value.join(", ")
-    );
-    // Implement the actual deletion logic here
-    selectedIncomes.value = [];
+    Inertia.post(route('board_member.incomes.destroy-multiple'), {
+        ids: selectedIncomes.value
+    }, {
+        preserveState: true,
+        onSuccess: () => {
+            selectedIncomes.value = [];
+            toast.success("Berhasil menghapus beberapa pendapatan");
+        },
+        onError: (errors) => {
+            toast.error(errors);
+            console.error("Error saat menghapus beberapa pendapatan:", errors);
+        },
+    });
 };
 
 const exportIncomes = () => {
@@ -583,10 +607,10 @@ const handlePageChange = (newPage: number) => {
 
             <div class="mb-3 flex items-center justify-between">
                 <p v-if="selectedCount > 0" class="font-semibold tracking-tight text-lg">
-                    ({{ selectedCount }}) transaksi dipilih
+                    ({{ selectedCount }}) pendapatan dipilih
                 </p>
                 <p v-else class="font-semibold tracking-tight text-lg">
-                    Data Transaksi
+                    Data Pendapatan
                 </p>
                 <div class="flex gap-2">
                     <DropdownMenu>

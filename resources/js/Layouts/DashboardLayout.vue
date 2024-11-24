@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, watchEffect, onMounted } from 'vue';
+import { Toaster } from 'vue-sonner'
 import { Button } from '@/Components/ui/button';
 import { Link, usePage } from '@inertiajs/vue3';
 import {
@@ -227,4 +228,6 @@ watchEffect(() => {
             </main>
         </div>
     </div>
+
+    <Toaster position="bottom-right" :theme="isDarkMode ? 'dark' : 'light'" richColors />
 </template>

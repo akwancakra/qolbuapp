@@ -9,47 +9,71 @@ class Beneficiary extends Model
 {
     use HasFactory;
 
-    protected $guarded = [];
+    // protected $guarded = [];
 
-    protected $hidden = [
+    // protected $hidden = [
+    //     'nik',
+    //     'place_of_birth',
+    //     'date_of_birth',
+    //     'phone_number',
+    // ];
+
+    protected $primaryKey = 'nik';
+
+    protected $fillable = [
         'nik',
         'place_of_birth',
         'date_of_birth',
+        'name',
+        'neighborhood_unit',
+        'gender',
+        'last_education',
+        'school_grade',
+        'father',
+        'mother',
+        'shirt_size',
+        'shoe_size',
+        'father_death_certificate_number',
+        'mother_death_certificate_number',
         'phone_number',
+        'status',
+        'description'
     ];
 
     public function scopeSearch($query, $term)
     {
         if ($term) {
-            return $query->where('name', 'LIKE', ''%' . $term . '%'');
+            return $query->where('name', 'LIKE', '%' . $term . '%');
         }
     }
 
     public function scopeAge($query, $min_age, $max_age)
     {
-        if ($min_age && $max_age) {
-            return $query->where('birth_date', '>=', now()->subYears($max_age))
-                ->where('birth_date', '<=', now()->subYears($min_age));
+        if ($min_age && $max_age && $max_age !== 0) {
+            return $query->where('date_of_birth', '>=', now()->subYears($max_age))
+                ->where('date_of_birth', '<=', now()->subYears($min_age));
+        } elseif ($min_age) {
+            return $query->where('date_of_birth', '<=', now()->subYears($min_age));
         }
     }
 
-    public function scopeEducationLevel($query, $education_level)
+    public function scopeEducationLevel($query, $last_education)
     {
-        if ($education_level) {
-            return $query->where('education_level', $education_level);
+        if ($last_education && $last_education !== 'default') {
+            return $query->where('last_education', $last_education);
         }
     }
 
     public function scopeSchoolGrade($query, $school_grade)
     {
-        if ($school_grade) {
+        if ($school_grade && $school_grade !== 0) {
             return $query->where('school_grade', $school_grade);
         }
     }
 
     public function scopeStatus($query, $status)
     {
-        if ($status) {
+        if ($status && $status !== 'default') {
             return $query->where('status', $status);
         }
     }
@@ -57,5 +81,12 @@ class Beneficiary extends Model
     public function scopeSortBy($query, $column = 'created_at', $direction = 'desc')
     {
         return $query->orderBy($column, $direction);
+    }
+
+    public function scopeGender($query, $gender)
+    {
+        if ($gender && $gender !== 'default') {
+            return $query->where('gender', $gender);
+        }
     }
 }

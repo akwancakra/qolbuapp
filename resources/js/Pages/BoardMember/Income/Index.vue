@@ -31,6 +31,8 @@ import {
     DropdownMenuSubTrigger,
     DropdownMenuPortal,
     DropdownMenuSubContent,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
 } from "@/Components/ui/dropdown-menu";
 import {
     AlertDialog,
@@ -55,15 +57,15 @@ import {
     FilePlusIcon,
     ChevronsUpDown,
     Check,
-    Loader2,
+    ReceiptTextIcon,
+    DatabaseIcon,
 } from "lucide-vue-next";
-import { BarChart } from "@/Components/ui/chart-bar";
 import { Checkbox } from "@/Components/ui/checkbox";
 // LOCAL COMPONENTS
-import { PaginatedIncomes } from "@/types";
+import { Ambassador, PaginatedIncomes } from "@/types";
 import DashboardLayout from "@/Layouts/DashboardLayout.vue";
 import { useDateFormat } from "@vueuse/core";
-import { formatNumber } from "@/lib/utils";
+import { formatCurrency, formatNumber, getImageUrl } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/Components/ui/tooltip";
 import {
     CalendarDate,
@@ -75,24 +77,48 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/Components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/Components/ui/command";
 import { Inertia } from "@inertiajs/inertia";
 import { toast } from "vue-sonner";
+import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogScrollContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Separator } from "@/Components/ui/separator";
+import TopAmbassadorTable from "../Beneficiary/_components/TopAmbassadorTable.vue";
+import TopDonorTable from "../Beneficiary/_components/TopDonorTable.vue";
+import IncomeBarChart from "../Beneficiary/_components/IncomeBarChart.vue";
+import IncomeLineChart from "../Beneficiary/_components/IncomeLineChart.vue";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/Components/ui/tabs";
+
+// CREATIN INTERFACES FOR DATA
+interface TopAmbassador {
+    ambassador_id: number;
+    total_amount: number;
+    ambassador: Ambassador;
+}
+
+interface TopDonor {
+    donor: string;
+    total_amount: number;
+}
 
 const page = usePage();
 const props = defineProps<{
     incomes: PaginatedIncomes;
+    incomeTotalAmount: number;
     availableTeamCodes: string[];
     availableYears: string[];
     availableAmbassadors: { label: string; value: string }[];
     availableMonths: { label: string; value: string }[];
     incomesInWeeks: { label: string; value: string; start: string; end: string }[];
+    topTenDonors: TopDonor[];
+    topTenAmbassadors: TopAmbassador[];
+    chartData: any;
     filters: {
         name: string;
-        teamCode: string;
+        team_code: string;
         time: string;
-        startRange: string;
-        endRange: string;
+        start_range: string;
+        end_range: string;
         week: string;
         month: string;
         year: string;
+        count_per_page: string;
     };
 }>();
 
@@ -104,7 +130,9 @@ const value = ref<DateRange>({
     end: new CalendarDate(new Date().getFullYear(), new Date().getMonth() + 1, new Date().getDate()).add({ days: 7 }),
 }) as Ref<DateRange>
 
+// ===============================
 // ========== SECTION 2 ==========
+// ===============================
 // State untuk mengontrol apakah konten utama ditampilkan atau tidak
 const showContentTwo = ref(false);
 
@@ -113,40 +141,33 @@ const toggleContentTwo = () => {
     showContentTwo.value = !showContentTwo.value;
 };
 
-// CHART DATA
-const data = [
-    { day: "17 Sen", pendapatan: Math.floor(Math.random() * 2000000) + 500000 },
-    { day: "18 Sel", pendapatan: Math.floor(Math.random() * 2000000) + 500000 },
-    { day: "19 Rab", pendapatan: Math.floor(Math.random() * 2000000) + 500000 },
-    { day: "20 Kam", pendapatan: Math.floor(Math.random() * 2000000) + 500000 },
-    { day: "21 Jum", pendapatan: Math.floor(Math.random() * 2000000) + 500000 },
-    { day: "22 Sab", pendapatan: Math.floor(Math.random() * 2000000) + 500000 },
-    { day: "23 Min", pendapatan: Math.floor(Math.random() * 2000000) + 500000 },
-];
-
+// ===============================
 // ========== SECTION 3 ==========
+// ===============================
 // SEARCHING AND FILTERING
 // Form untuk pencarian dan filter
 const form = useForm({
     name: 'default',
-    teamCode: 'default',
+    team_code: 'default',
     time: 'monthly',
-    startRange: '',
-    endRange: '',
+    start_range: '',
+    end_range: '',
     week: '',
     month: '',
     year: '',
+    count_per_page: '10'
 });
 
 onMounted(() => {
     form.name = props.filters.name;
-    form.teamCode = props.filters.teamCode;
+    form.team_code = props.filters.team_code;
     form.time = props.filters.time;
-    form.startRange = props.filters.startRange;
-    form.endRange = props.filters.endRange;
+    form.start_range = props.filters.start_range;
+    form.end_range = props.filters.end_range;
     form.week = props.filters.week;
     form.month = props.filters.month;
     form.year = props.filters.year;
+    form.count_per_page = props.filters.count_per_page;
 
     const flashMessage = (page.props.flash as { message?: string })?.message;
     if (flashMessage) {
@@ -156,8 +177,8 @@ onMounted(() => {
 
 watch(() => value.value, (newValue) => {
     if (newValue.start && newValue.end) {
-        form.startRange = newValue.start.toString();
-        form.endRange = newValue.end.toString();
+        form.start_range = newValue.start.toString();
+        form.end_range = newValue.end.toString();
     }
 }, { deep: true });
 
@@ -166,11 +187,12 @@ watch(() => form.data(), (newData) => {
         preserveState: true,
         data: newData,
     });
-
-    console.log(newData);
 });
 
-// Replace selectedTransactions with selectedIncomes
+// ========================================
+// ========== DATA TABLE SECTION ==========
+// ========================================
+const dropdownOpen = ref(false);
 const selectedIncomes = ref<number[]>([]);
 const clientLocale = ref(navigator.language || "en-US");
 
@@ -187,7 +209,22 @@ const toggleCheckbox = (checked: boolean, id: number) => {
     }
 };
 
+const toggleSelectAllCheckbox = (checked: boolean) => {
+    if (checked) {
+        const newIds = props.incomes.data.map(income => income.id);
+        selectedIncomes.value = [...new Set([...selectedIncomes.value, ...newIds])];
+    } else {
+        selectedIncomes.value = [];
+    }
+}
+
+const areAllBeneficiariesSelected = computed(() => {
+    return props.incomes.data.length > 0 && props.incomes.data.every(income => selectedIncomes.value.includes(income.id));
+})
+
 const deleteIncome = (id: number) => {
+    selectedIncomes.value = [];
+
     Inertia.delete(route('board_member.incomes.destroy', id), {
         onSuccess: () => {
             toast.success("Berhasil menghapus pendapatan");
@@ -201,17 +238,19 @@ const deleteIncome = (id: number) => {
 
 // Function untuk menghapus income yang dipilih
 const deleteSelectedIncomes = () => {
+    dropdownOpen.value = false;
+
     Inertia.post(route('board_member.incomes.destroy-multiple'), {
         ids: selectedIncomes.value
     }, {
         preserveState: true,
-        onSuccess: () => {
-            selectedIncomes.value = [];
-            toast.success("Berhasil menghapus beberapa pendapatan");
-        },
         onError: (errors) => {
             toast.error(errors);
             console.error("Error saat menghapus beberapa pendapatan:", errors);
+        },
+        onSuccess: () => {
+            selectedIncomes.value = [];
+            toast.success("Berhasil menghapus beberapa pendapatan");
         },
     });
 };
@@ -232,6 +271,57 @@ const handlePageChange = (newPage: number) => {
         preserveState: true,
     });
 };
+
+const secondaryTitlePage = computed(() => {
+    switch (form.time) {
+        case 'custom':
+            if (form.start_range && form.end_range) {
+                const startDate = new Date(form.start_range);
+                const endDate = new Date(form.end_range);
+                const startFormat = useDateFormat(startDate, "DD MMM", { locales: clientLocale }).value;
+                const endFormat = useDateFormat(endDate, "DD MMM YYYY", { locales: clientLocale }).value;
+
+                if (startDate.getFullYear() === endDate.getFullYear()) {
+                    if (startDate.getMonth() === endDate.getMonth()) {
+                        return `${useDateFormat(startDate, "DD", { locales: clientLocale }).value} - ${endFormat}`;
+                    }
+                    return `${startFormat} - ${useDateFormat(endDate, "DD MMM YYYY", { locales: clientLocale }).value}`;
+                }
+                return `${startFormat} - ${endFormat}`;
+            }
+            // if (form.start_range && form.end_range) {
+            //     const startDate = new Date(form.start_range);
+            //     const endDate = new Date(form.end_range);
+
+            //     const startFormat = useDateFormat(startDate, "DD MMM YYYY", { locales: clientLocale }).value;
+            //     let endFormat;
+
+            //     if (startDate.getFullYear() === endDate.getFullYear()) {
+            //         if (startDate.getMonth() === endDate.getMonth()) {
+            //             // Bulan dan tahun sama, hanya tampilkan hari di `end_range`
+            //             endFormat = useDateFormat(endDate, "DD", { locales: clientLocale }).value;
+            //         } else {
+            //             // Tahun sama, bulan berbeda, tampilkan bulan dan hari di `end_range`
+            //             endFormat = useDateFormat(endDate, "DD MMM", { locales: clientLocale }).value;
+            //         }
+            //     } else {
+            //         // Tahun berbeda, tampilkan tanggal lengkap di `end_range`
+            //         endFormat = useDateFormat(endDate, "DD MMM YYYY", { locales: clientLocale }).value;
+            //     }
+
+            //     return `${useDateFormat(startDate, "DD MMM", { locales: clientLocale }).value} - ${endFormat}`;
+            // }
+            return 'Kustom';
+        case 'weekly':
+            return form.week ? props.incomesInWeeks.find((week) => week.value === form.week)?.label : 'Mingguan';
+        case 'monthly':
+            return form.month && form.year ? `${props.availableMonths.find((month) => month.value === form.month)?.label} ${form.year}` : 'Bulanan';
+        case 'yearly':
+            return form.year ? `Year ${form.year}` : 'Tahunan';
+        default:
+            return 'Keseluruhan';
+    }
+});
 </script>
 
 <template>
@@ -251,20 +341,17 @@ const handlePageChange = (newPage: number) => {
             <div class="flex justify-between items-center mb-3">
                 <div>
                     <p class="font-semibold text-2xl tracking-tight">
-                        Pendapatan Minggu 1 Sept
+                        Pendapatan {{ secondaryTitlePage }}
                     </p>
                     <p class="text-sm text-neutral-500 dark:text-neutral-400">
-                        Lorem ipsum, dolor sit amet consectetur adipisicing
-                        elit. Eveniet veniam, vero omnis dolores temporibus sed?
+                        Daftar pendapatan yang telah ada pada range terpilih
                     </p>
                 </div>
             </div>
 
             <div class="grid gap-3 grid-cols-2 md:grid-cols-4">
-                <!-- Nama Duta -->
+                <!-- Duta -->
                 <div>
-                    <!-- example label: "Saodah"
-                    example value: 2 -->
                     <Label for="team">Duta</Label>
                     <Popover v-model:open="openAmbassador">
                         <PopoverTrigger as-child>
@@ -311,14 +398,14 @@ const handlePageChange = (newPage: number) => {
                         <PopoverTrigger as-child>
                             <Button variant="outline" role="combobox" :aria-expanded="openTeam"
                                 class="w-full justify-between">
-                                {{ form.teamCode
-                                    ? (form.teamCode === 'default' ? 'Semua' : form.teamCode)
+                                {{ form.team_code
+                                    ? (form.team_code === 'default' ? 'Semua' : form.team_code)
                                     : 'Pilih Tim...' }}
                                 <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                         </PopoverTrigger>
                         <PopoverContent class="md:w-auto lg:w-[300px] p-0">
-                            <Command v-model="form.teamCode">
+                            <Command v-model="form.team_code">
                                 <CommandInput placeholder="Cari Tim..." />
                                 <CommandEmpty>Tidak ada tim ditemukan.</CommandEmpty>
                                 <CommandList>
@@ -326,14 +413,14 @@ const handlePageChange = (newPage: number) => {
                                         <CommandItem value="default" @select="openTeam = false">
                                             <Check :class="[
                                                 'mr-2 h-4 w-4',
-                                                form.teamCode === 'default' ? 'opacity-100' : 'opacity-0',]" />
+                                                form.team_code === 'default' ? 'opacity-100' : 'opacity-0',]" />
                                             Semua
                                         </CommandItem>
                                         <CommandItem v-for="team in availableTeamCodes" :key="team" :value="team"
                                             @select="openTeam = false" class="overflow-hidden text-ellipsis">
                                             <Check :class="[
                                                 'mr-2 h-4 w-4',
-                                                form.teamCode === team ? 'opacity-100' : 'opacity-0',
+                                                form.team_code === team ? 'opacity-100' : 'opacity-0',
                                             ]" />
                                             {{ team }}
                                         </CommandItem>
@@ -431,11 +518,10 @@ const handlePageChange = (newPage: number) => {
             ]">
                 <div>
                     <p class="font-semibold text-2xl tracking-tight">
-                        Overview Minggu 1 Sept
+                        Overview {{ secondaryTitlePage }}
                     </p>
                     <p class="text-sm text-neutral-500 dark:text-neutral-400">
-                        Lorem ipsum, dolor sit amet consectetur adipisicing
-                        elit. Eveniet veniam, vero omnis dolores temporibus sed?
+                        Berikut adalah data yang telah diproses menjadi tabel dan chart
                     </p>
                 </div>
 
@@ -446,8 +532,10 @@ const handlePageChange = (newPage: number) => {
             </div>
 
             <div class="my-3 border border-neutral-300 p-2 rounded-lg dark:border-neutral-600">
-                <p class="text-sm text-neutral-500 -mb-1 dark:text-neutral-400">Total transferan pada minggu 1 sept</p>
-                <p class="font-semibold text-2xl tracking-tight break-words">Rp32.000.000</p>
+                <p class="text-sm text-neutral-500 -mb-1 dark:text-neutral-400">Total transferan pada {{
+                    secondaryTitlePage }}
+                </p>
+                <p class="font-semibold text-2xl tracking-tight break-words">{{ formatCurrency(incomeTotalAmount) }}</p>
             </div>
 
             <!-- Transition untuk smooth animasi -->
@@ -455,144 +543,51 @@ const handlePageChange = (newPage: number) => {
                 <!-- SHOW HIDE DISINI -->
                 <div v-if="showContentTwo" class="grid gap-2 lg:grid-cols-2">
                     <div class="p-2 border border-neutral-300 rounded-lg dark:border-neutral-700">
-                        <p class="text-center font-semibold tracking-tight">Top 10 Duta - Minggu 1 Sept</p>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead class="h-8">#</TableHead>
-                                    <TableHead class="h-8">Nama</TableHead>
-                                    <TableHead class="h-8">Nominal</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                <TableRow class="bg-yellow-100 font-semibold dark:bg-yellow-500 dark:text-yellow-100">
-                                    <TableCell class="py-1.5">1</TableCell>
-                                    <TableCell class="py-1.5">Josephine Lily</TableCell>
-                                    <TableCell class="py-1.5">Rp10.000.000</TableCell>
-                                </TableRow>
-                                <TableRow class="bg-gray-100 font-semibold dark:bg-gray-500 dark:text-gray-100">
-                                    <TableCell class="py-1.5">2</TableCell>
-                                    <TableCell class="py-1.5">Andreas Thon</TableCell>
-                                    <TableCell class="py-1.5">Rp9.500.000</TableCell>
-                                </TableRow>
-                                <TableRow
-                                    class="bg-yellow-700 text-white font-semibold dark:bg-yellow-800 dark:text-yellow-100 hover:text-white hover:bg-yellow-800">
-                                    <TableCell class="py-1.5">3</TableCell>
-                                    <TableCell class="py-1.5">Andreas Thon</TableCell>
-                                    <TableCell class="py-1.5">Rp9.500.000</TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell class="py-1.5">4</TableCell>
-                                    <TableCell class="py-1.5">Andreas Thon</TableCell>
-                                    <TableCell class="py-1.5">Rp9.500.000</TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell class="py-1.5">5</TableCell>
-                                    <TableCell class="py-1.5">Andreas Thon</TableCell>
-                                    <TableCell class="py-1.5">Rp9.500.000</TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell class="py-1.5">6</TableCell>
-                                    <TableCell class="py-1.5">Andreas Thon</TableCell>
-                                    <TableCell class="py-1.5">Rp9.500.000</TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell class="py-1.5">7</TableCell>
-                                    <TableCell class="py-1.5">Andreas Thon</TableCell>
-                                    <TableCell class="py-1.5">Rp9.500.000</TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell class="py-1.5">8</TableCell>
-                                    <TableCell class="py-1.5">Andreas Thon</TableCell>
-                                    <TableCell class="py-1.5">Rp9.500.000</TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell class="py-1.5">9</TableCell>
-                                    <TableCell class="py-1.5">Andreas Thon</TableCell>
-                                    <TableCell class="py-1.5">Rp9.500.000</TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell class="py-1.5">10</TableCell>
-                                    <TableCell class="py-1.5">Andreas Thon</TableCell>
-                                    <TableCell class="py-1.5">Rp9.500.000</TableCell>
-                                </TableRow>
-                            </TableBody>
-                        </Table>
+                        <p class="text-center font-semibold tracking-tight break-words">Top 10 Duta - {{
+                            secondaryTitlePage }}
+                        </p>
+                        <TopAmbassadorTable :top-ambassadors="topTenAmbassadors" />
                     </div>
-                    <div class="p-2 border border-neutral-300 rounded-lg dark:border-neutral-700">
-                        <p class="text-center font-semibold tracking-tight">Top 10 Donatur - Minggu 1 Sept</p>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead class="h-8">#</TableHead>
-                                    <TableHead class="h-8">Nama</TableHead>
-                                    <TableHead class="h-8">Nominal</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                <TableRow class="bg-yellow-100 font-semibold dark:bg-yellow-500 dark:text-yellow-100">
-                                    <TableCell class="py-1.5">1</TableCell>
-                                    <TableCell class="py-1.5">Josephine Lily</TableCell>
-                                    <TableCell class="py-1.5">Rp10.000.000</TableCell>
-                                </TableRow>
-                                <TableRow class="bg-gray-100 font-semibold dark:bg-gray-500 dark:text-gray-100">
-                                    <TableCell class="py-1.5">2</TableCell>
-                                    <TableCell class="py-1.5">Andreas Thon</TableCell>
-                                    <TableCell class="py-1.5">Rp9.500.000</TableCell>
-                                </TableRow>
-                                <TableRow
-                                    class="bg-yellow-700 text-white font-semibold dark:bg-yellow-800 dark:text-yellow-100 hover:text-white hover:bg-yellow-800">
-                                    <TableCell class="py-1.5">3</TableCell>
-                                    <TableCell class="py-1.5">Andreas Thon</TableCell>
-                                    <TableCell class="py-1.5">Rp9.500.000</TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell class="py-1.5">4</TableCell>
-                                    <TableCell class="py-1.5">Andreas Thon</TableCell>
-                                    <TableCell class="py-1.5">Rp9.500.000</TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell class="py-1.5">5</TableCell>
-                                    <TableCell class="py-1.5">Andreas Thon</TableCell>
-                                    <TableCell class="py-1.5">Rp9.500.000</TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell class="py-1.5">6</TableCell>
-                                    <TableCell class="py-1.5">Andreas Thon</TableCell>
-                                    <TableCell class="py-1.5">Rp9.500.000</TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell class="py-1.5">7</TableCell>
-                                    <TableCell class="py-1.5">Andreas Thon</TableCell>
-                                    <TableCell class="py-1.5">Rp9.500.000</TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell class="py-1.5">8</TableCell>
-                                    <TableCell class="py-1.5">Andreas Thon</TableCell>
-                                    <TableCell class="py-1.5">Rp9.500.000</TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell class="py-1.5">9</TableCell>
-                                    <TableCell class="py-1.5">Andreas Thon</TableCell>
-                                    <TableCell class="py-1.5">Rp9.500.000</TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell class="py-1.5">10</TableCell>
-                                    <TableCell class="py-1.5">Andreas Thon</TableCell>
-                                    <TableCell class="py-1.5">Rp9.500.000</TableCell>
-                                </TableRow>
-                            </TableBody>
-                        </Table>
+                    <div class="p-2 border border-neutral-300 rounded-lg break-words dark:border-neutral-700">
+                        <p class="text-center font-semibold tracking-tight">Top 10 Donatur - {{ secondaryTitlePage }}
+                        </p>
+                        <TopDonorTable :top-donors="topTenDonors" />
+                    </div>
+                    <!-- <div class="col-span-2 my-3">
+                        <Tabs default-value="daily">
+                            <TabsList>
+                                <TabsTrigger value="daily">
+                                    Harian
+                                </TabsTrigger>
+                                <TabsTrigger value="weekly">
+                                    Bulanan
+                                </TabsTrigger>
+                                <TabsTrigger value="monthly">
+                                    Mingguan
+                                </TabsTrigger>
+                                <TabsTrigger value="yearly">
+                                    Tahunan
+                                </TabsTrigger>
+                            </TabsList>
+                            <TabsContent value="daily">
+                                Daily contect goes here
+                            </TabsContent>
+                            <TabsContent value="weekly">
+                                Weekly content goes here
+                            </TabsContent>
+                            <TabsContent value="monthly">
+                                Monthly content goes here
+                            </TabsContent>
+                            <TabsContent value="yearly">
+                                Yearly content goes here
+                            </TabsContent>
+                        </Tabs>
+                    </div> -->
+                    <div>
+                        <IncomeBarChart :chart-data="chartData" />
                     </div>
                     <div>
-                        <BarChart :data="data" index="day" :categories="['pendapatan']" :y-formatter="(tick) => {
-                            return typeof tick === 'number'
-                                ? `Rp ${new Intl.NumberFormat(
-                                    'id-ID'
-                                ).format(tick)}`
-                                : '';
-                        }
-                            " :colors="['#58bb69']" />
+                        <IncomeLineChart :chart-data="chartData" />
                     </div>
                 </div>
             </transition>
@@ -613,7 +608,7 @@ const handlePageChange = (newPage: number) => {
                     Data Pendapatan
                 </p>
                 <div class="flex gap-2">
-                    <DropdownMenu>
+                    <DropdownMenu :open="dropdownOpen" @update:open="dropdownOpen = $event">
                         <DropdownMenuTrigger as-child>
                             <Button variant="outline" class="gap-2">
                                 <p>Menu</p>
@@ -633,6 +628,36 @@ const handlePageChange = (newPage: number) => {
                                     <p>Tambah transaksi</p>
                                     </Link>
                                 </DropdownMenuItem>
+                                <DropdownMenuSub>
+                                    <DropdownMenuSubTrigger class="gap-1">
+                                        <DatabaseIcon :size="18" />
+                                        <p>Tampil data</p>
+                                    </DropdownMenuSubTrigger>
+                                    <DropdownMenuPortal>
+                                        <DropdownMenuSubContent>
+                                            <DropdownMenuRadioGroup v-model="form.count_per_page">
+                                                <DropdownMenuRadioItem value="0" class="cursor-pointer gap-1">
+                                                    <FileTextIcon :size="18" /> Semua data
+                                                </DropdownMenuRadioItem>
+                                                <DropdownMenuRadioItem value="10" class="cursor-pointer gap-1">
+                                                    <FileTextIcon :size="18" /> 10 data
+                                                </DropdownMenuRadioItem>
+                                                <DropdownMenuRadioItem value="20" class="cursor-pointer gap-1">
+                                                    <FileTextIcon :size="18" /> 20 data
+                                                </DropdownMenuRadioItem>
+                                                <DropdownMenuRadioItem value="30" class="cursor-pointer gap-1">
+                                                    <FileTextIcon :size="18" /> 30 data
+                                                </DropdownMenuRadioItem>
+                                                <DropdownMenuRadioItem value="40" class="cursor-pointer gap-1">
+                                                    <FileTextIcon :size="18" /> 40 data
+                                                </DropdownMenuRadioItem>
+                                                <DropdownMenuRadioItem value="50" class="cursor-pointer gap-1">
+                                                    <FileTextIcon :size="18" /> 50 data
+                                                </DropdownMenuRadioItem>
+                                            </DropdownMenuRadioGroup>
+                                        </DropdownMenuSubContent>
+                                    </DropdownMenuPortal>
+                                </DropdownMenuSub>
                                 <DropdownMenuSub>
                                     <DropdownMenuSubTrigger class="gap-1">
                                         <DownloadIcon :size="18" />
@@ -696,7 +721,12 @@ const handlePageChange = (newPage: number) => {
                     </TableCaption>
                     <TableHeader>
                         <TableRow>
-                            <TableHead></TableHead>
+                            <Label for="checkAll">
+                                <TableHead class="p-3">
+                                    <Checkbox id="checkAll" :checked="areAllBeneficiariesSelected"
+                                        @update:checked="toggleSelectAllCheckbox" />
+                                </TableHead>
+                            </Label>
                             <TableHead>#</TableHead>
                             <TableHead class="min-w-[120px]">Tgl Submit</TableHead>
                             <TableHead class="min-w-[120px]">Tgl Transfer</TableHead>
@@ -825,7 +855,65 @@ const handlePageChange = (newPage: number) => {
                                     <DropdownMenuContent align="end">
                                         <DropdownMenuLabel>Aksi</DropdownMenuLabel>
                                         <DropdownMenuSeparator />
-                                        <!-- Link untuk mengedit user -->
+                                        <template v-if="income.proof">
+                                            <DropdownMenuItem as-child>
+                                                <Dialog>
+                                                    <DialogTrigger
+                                                        class="flex items-center gap-1.5 text-sm px-1.5 py-1 w-full">
+                                                        <ReceiptTextIcon :size="18" /> Bukti
+                                                    </DialogTrigger>
+                                                    <DialogScrollContent>
+                                                        <DialogHeader>
+                                                            <DialogTitle>Bukti Pendapatan</DialogTitle>
+                                                            <div>
+                                                                <Separator class="my-2 dark:bg-neutral-600" />
+                                                                <div class="grid grid-cols-2 gap-2">
+                                                                    <div>
+                                                                        <p
+                                                                            class="font-semibold text-sm tracking-tight text-neutral-600 dark:text-neutral-400 -mb-1">
+                                                                            Duta</p>
+                                                                        <p>{{ income.ambassador?.name }}</p>
+                                                                    </div>
+                                                                    <div>
+                                                                        <p
+                                                                            class="font-semibold text-sm tracking-tight text-neutral-600 dark:text-neutral-400 -mb-1">
+                                                                            Donatur</p>
+                                                                        <p>{{ income.donor }}</p>
+                                                                    </div>
+                                                                    <div>
+                                                                        <p
+                                                                            class="font-semibold text-sm tracking-tight text-neutral-600 dark:text-neutral-400 -mb-1">
+                                                                            Atas Nama</p>
+                                                                        <p>{{ income.on_behalf_of }}</p>
+                                                                    </div>
+                                                                    <div>
+                                                                        <p
+                                                                            class="font-semibold text-sm tracking-tight text-neutral-600 dark:text-neutral-400 -mb-1">
+                                                                            Nominal</p>
+                                                                        <p>{{ formatCurrency(income.amount) }}</p>
+                                                                    </div>
+                                                                    <div class="col-span-2">
+                                                                        <p
+                                                                            class="font-semibold text-sm tracking-tight text-neutral-600 dark:text-neutral-400 mb-1">
+                                                                            Bukti Pendapatan</p>
+                                                                        <img :src="getImageUrl(`proof/${income.proof}`)"
+                                                                            class="w-full rounded-lg" />
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </DialogHeader>
+
+                                                        <DialogFooter>
+                                                            <DialogClose>
+                                                                <Button variant="outline">
+                                                                    Tutup
+                                                                </Button>
+                                                            </DialogClose>
+                                                        </DialogFooter>
+                                                    </DialogScrollContent>
+                                                </Dialog>
+                                            </DropdownMenuItem>
+                                        </template>
                                         <DropdownMenuItem as-child>
                                             <Link :href="route(
                                                 'board_member.incomes.edit',
@@ -835,7 +923,6 @@ const handlePageChange = (newPage: number) => {
                                             <PencilIcon :size="18" /> Ubah
                                             </Link>
                                         </DropdownMenuItem>
-                                        <!-- Item untuk hapus dengan background merah -->
                                         <DropdownMenuItem as-child>
                                             <AlertDialog>
                                                 <AlertDialogTrigger

@@ -16,26 +16,40 @@ class BeneficiaryController extends Controller
     public function index(Request $request)
     {
         $request->validate([
-            'search' => 'nullable|string',
-            'min_age' => 'nullable|integer|min:0',
-            'max_age' => 'nullable|integer|gt:min_age',
-            'education_level' => 'nullable|string',
-            'school_grade' => 'nullable|integer|gt:0',
-            'status' => ['nullable', Rule::in(['Yatim', 'Piatu', 'Yatim Piatu', 'Dhuafa'])],
+            'name' => 'nullable|string',
+            'min_age' => 'nullable|integer|min:0|max:100|lte:max_age',
+            'max_age' => 'nullable|integer|min:0|max:100|gte:min_age',
+            'education' => 'nullable|string',
+            'school_grade' => 'nullable|string|min:0|max:14',
+            'shirt_size' => 'nullable|string',
+            'shoe_size' => 'nullable|integer',
+            'gender' => 'nullable|string|in:default,male,female',
+            'status' => ['nullable', Rule::in(['default', 'Yatim', 'Piatu', 'Yatim Piatu', 'Dhuafa'])],
             'sort_by' => 'nullable|string',
             'sort_direction' => 'nullable|string|in:asc,desc',
+            'count_per_page' => 'nullable|string',
         ]);
 
-        $beneficiaries = Beneficiary::query()
-            ->search($request->search)
-            ->age($request->min_age, $request->max_age)
-            ->educationLevel($request->education_level)
-            ->schoolGrade($request->school_grade)
-            ->status($request->status)
-            ->sortBy($request->input('sort_by', 'created_at'), $request->input('sort_direction', 'desc'))
-            ->paginate(10);
+        $countPerPage = (int)($request->count_per_page ?? 10);
 
-        return Inertia::render('Ambassador/Beneficiary/Index', compact('beneficiaries'));
+        $beneficiaries = Beneficiary::query()
+            ->search($request->name)
+            ->age($request->min_age, $request->max_age)
+            ->educationLevel($request->education)
+            ->schoolGrade($request->school_grade)
+            ->gender($request->gender)
+            ->status($request->status)
+            ->shirt($request->shirt_size)
+            ->shoe($request->shoe_size)
+            ->sortBy($request->input('sort_by', 'created_at'), $request->input('sort_direction', 'desc'))
+            ->paginate($countPerPage);
+
+        return Inertia::render('Ambassador/Beneficiary/Index', [
+            'beneficiaries' => $beneficiaries,
+            'filters' => $request->all(),
+            'educationList' => $this->educationList,
+            'statusList' => $this->statusList,
+        ]);
     }
 
     /**

@@ -20,3 +20,19 @@ export const formatNumber = (value: number) => {
         maximumFractionDigits: 0,
     }).format(value);
 };
+
+export const parseNumber = (value: string): number => {
+    return Number(value.replace(/\D/g, ""));
+};
+
+export const getImageUrl = (fileName: string) => {
+    return `/storage/images/${fileName}`;
+};
+
+export const getUserDefaultImage = () => {
+    return "/assets/images/user-default.jpg";
+};
+
+export const getDefaultImage = () => {
+    return "/assets/images/image-default.png";
+};

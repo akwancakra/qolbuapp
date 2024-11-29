@@ -19,8 +19,11 @@ return new class extends Migration
             $table->date('date_of_birth');
             $table->enum('gender', ['male', 'female']);
             $table->string('neighborhood_unit')->nullable();
+            $table->string('photo')->nullable();
             $table->string('father')->nullable();
+            $table->string('father_photo')->nullable();
             $table->string('mother')->nullable();
+            $table->string('mother_photo')->nullable();
             $table->string('last_education')->nullable();
             $table->string('school_grade')->nullable();
             $table->string('shirt_size')->nullable();

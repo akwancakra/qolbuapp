@@ -1,17 +1,18 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3'
 import DashboardLayout from '@/Layouts/DashboardLayout.vue'
-import { Separator } from '@/Components/ui/separator';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/Components/ui/dropdown-menu';
 import { CornerUpLeftIcon, EllipsisIcon, PencilIcon, Trash2Icon } from 'lucide-vue-next';
-import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/Components/ui/dropdown-menu';
+import { Separator } from '@/Components/ui/separator';
+import { Button } from '@/Components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/Components/ui/alert-dialog';
+import { AspectRatio } from '@/Components/ui/aspect-ratio';
 import { Beneficiary } from '@/types';
 import { ref } from 'vue';
 import { useDateFormat } from '@vueuse/core';
-import { AspectRatio } from '@/Components/ui/aspect-ratio';
 import { Inertia } from '@inertiajs/inertia';
 import { toast } from 'vue-sonner';
+import { getImageUrl, getUserDefaultImage } from '@/lib/utils';
 
 defineProps<{
     beneficiary: Beneficiary
@@ -109,8 +110,8 @@ const deleteBeneficiary = (nik: string) => {
 
                 <div class="max-w-[250px] lg:max-w-[300px]">
                     <AspectRatio :ratio="6 / 7">
-                        <img :src="`/storage/images/beneficiaries/${beneficiary?.photo}`" alt="Image"
-                            class="rounded-md object-cover w-full h-full" draggable="false">
+                        <img :src="beneficiary.photo ? getImageUrl(`beneficiaries/${beneficiary.photo}`) : getUserDefaultImage()"
+                            alt="Image" class="rounded-md object-cover w-full h-full" draggable="false">
                     </AspectRatio>
                 </div>
 
@@ -159,6 +160,10 @@ const deleteBeneficiary = (nik: string) => {
                         <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Status</p>
                         <p>{{ beneficiary.status }}</p>
                     </div>
+                    <div>
+                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">No. Telp</p>
+                        <p>{{ beneficiary.phone_number }}</p>
+                    </div>
                 </div>
 
                 <div>
@@ -169,30 +174,48 @@ const deleteBeneficiary = (nik: string) => {
 
             <Separator class="my-5 dark:bg-neutral-600" />
 
-            <div>
-                <p class="font-semibold text-lg tracking-tight mb-3">Data Orang Tua</p>
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 my-3">
-                    <div>
-                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Ayah</p>
-                        <p>{{ beneficiary.father }}</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div>
+                    <p class="font-semibold text-lg tracking-tight mb-3">Data Ayah</p>
+                    <div class="grid grid-cols-2 gap-2 my-3">
+                        <div class="max-w-[150px] lg:max-w-[250px] col-span-2">
+                            <AspectRatio :ratio="6 / 7">
+                                <img :src="beneficiary.father_photo ? getImageUrl(`beneficiaries/${beneficiary.father_photo}`) : getUserDefaultImage()"
+                                    alt="Image" class="rounded-md object-cover w-full h-full" draggable="false">
+                            </AspectRatio>
+                        </div>
+                        <div>
+                            <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Ayah</p>
+                            <p>{{ beneficiary.father }}</p>
+                        </div>
+                        <div>
+                            <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Akta Kematian
+                                Ayah
+                            </p>
+                            <p>{{ beneficiary.father_death_certificate_number }}</p>
+                        </div>
                     </div>
-                    <div>
-                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Akta Kematian Ayah
-                        </p>
-                        <p>{{ beneficiary.father_death_certificate_number }}</p>
-                    </div>
-                    <div>
-                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Ibu</p>
-                        <p>{{ beneficiary.mother }}</p>
-                    </div>
-                    <div>
-                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Akta Kematian Ibu
-                        </p>
-                        <p>{{ beneficiary.mother_death_certificate_number }}</p>
-                    </div>
-                    <div>
-                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">No. Telp</p>
-                        <p>{{ beneficiary.phone_number }}</p>
+                </div>
+
+                <div>
+                    <p class="font-semibold text-lg tracking-tight mb-3">Data Ibu</p>
+                    <div class="grid grid-cols-2 gap-2 my-3">
+                        <div class="max-w-[150px] lg:max-w-[250px] col-span-2">
+                            <AspectRatio :ratio="6 / 7">
+                                <img :src="beneficiary.mother_photo ? getImageUrl(`beneficiaries/${beneficiary.mother_photo}`) : getUserDefaultImage()"
+                                    alt="Image" class="rounded-md object-cover w-full h-full" draggable="false">
+                            </AspectRatio>
+                        </div>
+                        <div>
+                            <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Ibu</p>
+                            <p>{{ beneficiary.mother }}</p>
+                        </div>
+                        <div>
+                            <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Akta Kematian
+                                Ibu
+                            </p>
+                            <p>{{ beneficiary.mother_death_certificate_number }}</p>
+                        </div>
                     </div>
                 </div>
             </div>

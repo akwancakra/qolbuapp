@@ -1,22 +1,20 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3'
 import DashboardLayout from '@/Layouts/DashboardLayout.vue'
+import { CornerUpLeftIcon } from 'lucide-vue-next';
 import { Separator } from '@/Components/ui/separator';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/Components/ui/dropdown-menu';
-import { CornerUpLeftIcon, EllipsisIcon, PencilIcon, Trash2Icon } from 'lucide-vue-next';
-import { Button } from '@/components/ui/button';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/Components/ui/alert-dialog';
+import { Button } from '@/Components/ui/button';
+import { AspectRatio } from '@/Components/ui/aspect-ratio';
 import { Beneficiary } from '@/types';
 import { ref } from 'vue';
 import { useDateFormat } from '@vueuse/core';
-import { AspectRatio } from '@/Components/ui/aspect-ratio';
+import { getImageUrl, getUserDefaultImage } from '@/lib/utils';
 
-const props = defineProps<{
+defineProps<{
     beneficiary: Beneficiary
 }>();
 
 const clientLocale = ref(navigator.language || 'en-US');
-
 </script>
 
 <template>
@@ -31,13 +29,13 @@ const clientLocale = ref(navigator.language || 'en-US');
         </template>
 
         <Button class="mb-3" variant="outline">
-            <Link :href="route('duta.beneficiaries.index')" class="flex gap-1">
+            <Link :href="route('ambassador.beneficiaries.index')" class="flex gap-1">
             <CornerUpLeftIcon :size="18" /> Kembali
             </Link>
         </Button>
 
         <section class="bg-white p-3 rounded-lg mb-3 dark:bg-neutral-800">
-            <div>
+            <div class="flex justify-between">
                 <p class="font-semibold text-2xl tracking-tight">{{ beneficiary.name }}</p>
             </div>
 
@@ -48,66 +46,112 @@ const clientLocale = ref(navigator.language || 'en-US');
 
                 <div class="max-w-[250px] lg:max-w-[300px]">
                     <AspectRatio :ratio="6 / 7">
-                        <img :src="`/storage/images/beneficiaries/${beneficiary.photo}`" alt="Image"
-                            class="rounded-md object-cover w-full h-full" draggable="false">
+                        <img :src="beneficiary.photo ? getImageUrl(`beneficiaries/${beneficiary.photo}`) : getUserDefaultImage()"
+                            alt="Image" class="rounded-md object-cover w-full h-full" draggable="false">
                     </AspectRatio>
                 </div>
 
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 my-3">
                     <div>
+                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">NIK</p>
+                        <p>{{ beneficiary.nik }}</p>
+                    </div>
+                    <div>
                         <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Nama</p>
                         <p>{{ beneficiary.name }}</p>
                     </div>
                     <div>
-                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Nama Panggilan</p>
-                        <p>{{ beneficiary.nickname }}</p>
+                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Jenis Kelamin</p>
+                        <p>{{ beneficiary.gender === 'male' ? 'Laki-laki' : 'Perempuan' }}</p>
+                    </div>
+                    <div>
+                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Tempat Lahir</p>
+                        <p>{{ beneficiary.place_of_birth }}</p>
                     </div>
                     <div>
                         <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Tanggal Lahir</p>
-                        <p>{{ useDateFormat(beneficiary.birthdate, 'DD MMM YYYY', {
+                        <p>{{ useDateFormat(beneficiary.date_of_birth, 'DD MMM YYYY', {
                             locales:
                                 clientLocale
                         }) }}</p>
                     </div>
                     <div>
-                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Kota</p>
-                        <p>{{ beneficiary.city }}</p>
+                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">RT/RW</p>
+                        <p>{{ beneficiary.neighborhood_unit }}</p>
                     </div>
                     <div>
-                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Provinsi</p>
-                        <p>{{ beneficiary.province }}</p>
+                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Ukuran Baju</p>
+                        <p>{{ beneficiary.shirt_size }}</p>
                     </div>
                     <div>
-                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Negara</p>
-                        <p>{{ beneficiary.country }}</p>
+                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Ukuran Sepatu</p>
+                        <p>{{ beneficiary.shoe_size }}</p>
                     </div>
                     <div>
-                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Kode Pos</p>
-                        <p>{{ beneficiary.postal_code }}</p>
+                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Pendidikan
+                            Terakhir</p>
+                        <p>{{ beneficiary.last_education }}, Kelas {{ beneficiary.school_grade }}</p>
                     </div>
                     <div>
-                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">No Handphone</p>
-                        <p>{{ beneficiary.phone }}</p>
+                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Status</p>
+                        <p>{{ beneficiary.status }}</p>
                     </div>
                     <div>
-                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Email</p>
-                        <p>{{ beneficiary.email }}</p>
+                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">No. Telp</p>
+                        <p>{{ beneficiary.phone_number }}</p>
                     </div>
+                </div>
+
+                <div>
+                    <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Keterangan</p>
+                    <p>{{ beneficiary.description }}</p>
                 </div>
             </div>
 
             <Separator class="my-5 dark:bg-neutral-600" />
 
-            <div>
-                <p class="font-semibold text-lg tracking-tight mb-3">Data Orang Tua</p>
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 my-3">
-                    <div>
-                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Ayah</p>
-                        <p>{{ beneficiary.parent_father }}</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div>
+                    <p class="font-semibold text-lg tracking-tight mb-3">Data Ayah</p>
+                    <div class="grid grid-cols-2 gap-2 my-3">
+                        <div class="max-w-[150px] lg:max-w-[250px] col-span-2">
+                            <AspectRatio :ratio="6 / 7">
+                                <img :src="beneficiary.father_photo ? getImageUrl(`beneficiaries/${beneficiary.father_photo}`) : getUserDefaultImage()"
+                                    alt="Image" class="rounded-md object-cover w-full h-full" draggable="false">
+                            </AspectRatio>
+                        </div>
+                        <div>
+                            <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Ayah</p>
+                            <p>{{ beneficiary.father }}</p>
+                        </div>
+                        <div>
+                            <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Akta Kematian
+                                Ayah
+                            </p>
+                            <p>{{ beneficiary.father_death_certificate_number }}</p>
+                        </div>
                     </div>
-                    <div>
-                        <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Ibu</p>
-                        <p>{{ beneficiary.parent_mother }}</p>
+                </div>
+
+                <div>
+                    <p class="font-semibold text-lg tracking-tight mb-3">Data Ibu</p>
+                    <div class="grid grid-cols-2 gap-2 my-3">
+                        <div class="max-w-[150px] lg:max-w-[250px] col-span-2">
+                            <AspectRatio :ratio="6 / 7">
+                                <img :src="beneficiary.mother_photo ? getImageUrl(`beneficiaries/${beneficiary.mother_photo}`) : getUserDefaultImage()"
+                                    alt="Image" class="rounded-md object-cover w-full h-full" draggable="false">
+                            </AspectRatio>
+                        </div>
+                        <div>
+                            <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Ibu</p>
+                            <p>{{ beneficiary.mother }}</p>
+                        </div>
+                        <div>
+                            <p class="-mb-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">Akta Kematian
+                                Ibu
+                            </p>
+                            <p>{{ beneficiary.mother_death_certificate_number }}</p>
+                        </div>
                     </div>
                 </div>
             </div>

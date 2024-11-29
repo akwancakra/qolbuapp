@@ -17,6 +17,7 @@ export type Income = {
     amount: number;
     payment_method: string;
     type: string;
+    proof?: string;
     created_at: string;
     updated_at: string;
     ambassador?: Ambassador;
@@ -33,7 +34,7 @@ export type Ambassador = {
 };
 
 export type Beneficiary = {
-    nik: string;
+    nik: number;
     place_of_birth: string;
     date_of_birth: string;
     name: string;
@@ -41,8 +42,11 @@ export type Beneficiary = {
     gender: string;
     last_education?: string;
     school_grade?: string;
+    photo?: string;
     father?: string;
+    father_photo?: string;
     mother?: string;
+    mother_photo?: string;
     shirt_size?: string;
     shoe_size?: string;
     father_death_certificate_number?: string;

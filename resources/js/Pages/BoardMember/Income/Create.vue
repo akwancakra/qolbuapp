@@ -4,24 +4,25 @@ import { Head, Link } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 import { Form, Field, ErrorMessage } from 'vee-validate';
 import { toTypedSchema } from '@vee-validate/zod';
-import { onMounted, ref, watch } from 'vue';
-import { Label } from '@/components/ui/label';
+import { computed, ref, watch } from 'vue';
+import { Label } from '@/Components/ui/label';
 import { Input } from '@/Components/ui/input';
 import { Separator } from '@/Components/ui/separator';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/Components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/Components/ui/alert-dialog';
 import { AlertCircle, Check, ChevronsUpDown, CornerUpLeftIcon, Loader2, Save } from 'lucide-vue-next';
 import { Popover, PopoverContent, PopoverTrigger } from "@/Components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/Components/ui/command";
 import { reactive } from 'vue';
 import { Inertia } from '@inertiajs/inertia';
-import { useDateFormat } from '@vueuse/core';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
-import { Ambassador, Income } from '@/types';
 import { Alert, AlertDescription, AlertTitle } from '@/Components/ui/alert';
+import { formatCurrency } from '@/lib/utils';
+import { toast } from 'vue-sonner';
+import { NumberField, NumberFieldContent, NumberFieldDecrement, NumberFieldIncrement, NumberFieldInput } from '@/Components/ui/number-field';
 
-defineProps<{
-    availableAmbassadors: { label: string; value: number }[];
+const props = defineProps<{
+    availableAmbassadors: { label: string; value: string }[];
     paymentMethods: { label: string; value: string }[];
     donationTypes: { label: string; value: string }[];
 }>();
@@ -39,6 +40,11 @@ const validationSchema = toTypedSchema(
         amount: zod.number().min(3, { message: 'Nominal donasi minimal 3 karakter' }),
         payment_method: zod.string().min(2, { message: 'Metode donasi minimal 2 karakter' }),
         type: zod.string().min(2, { message: 'Tipe donasi minimal 2 karakter' }),
+        proof: zod.any().refine((file) => {
+            if (!file) return true;
+            const acceptedFormats = ['image/jpeg', 'image/png', 'application/pdf'];
+            return file.size <= 1048576 && acceptedFormats.includes(file.type);
+        }, { message: 'Bukti transfer harus berupa file jpg, jpeg, png, atau pdf dan maksimal 1MB' }),
     })
 );
 
@@ -51,6 +57,7 @@ const formValues = reactive({
     amount: 0,
     payment_method: '',
     type: '',
+    proof: null as File | null
 });
 
 function resetForm() {
@@ -62,17 +69,27 @@ function resetForm() {
         amount: 0,
         payment_method: '',
         type: '',
+        proof: null as File | null
     });
 }
 
 async function onSubmit(values: any) {
     isSubmitting.value = true;
     try {
+        let ambassador = props.availableAmbassadors.find((ambassador) => ambassador.label === formValues.ambassador)?.value;
+
         Inertia.post(route('board_member.incomes.store'), {
             ...values,
             amount: Number(values.amount),
-            ambassador: Number(values.ambassador),
+            ambassador: Number(ambassador),
         }, {
+            onError: (errors) => {
+                console.error("Error dari backend:", errors);
+
+                if (errors.message) {
+                    toast.error(errors.message);
+                }
+            },
             onFinish: () => {
                 isSubmitting.value = false;
             },
@@ -82,9 +99,10 @@ async function onSubmit(values: any) {
     }
 }
 
-watch(() => formValues.ambassador, (newValues) => {
-    formValues.ambassador = newValues.toString();
-}, { deep: true });
+// Add a computed property to handle file preview
+const filePreviewUrl = computed(() => {
+    return formValues.proof ? URL.createObjectURL(formValues.proof) : null;
+});
 </script>
 
 <template>
@@ -132,7 +150,9 @@ watch(() => formValues.ambassador, (newValues) => {
                         </template>
 
                         <div>
-                            <Label for="transfer_date">Tanggal Transfer</Label>
+                            <Label for="transfer_date">Tanggal Transfer
+                                <span class="text-xs text-red-500">*wajib diisi</span>
+                            </Label>
                             <Field v-model="formValues.transfer_date" name="transfer_date" type="text"
                                 :rules="{ required: true }">
                                 <template v-slot="{ field }">
@@ -143,34 +163,36 @@ watch(() => formValues.ambassador, (newValues) => {
                         </div>
 
                         <div>
-                            <Label for="team">Duta</Label>
+                            <Label for="ambassador">Duta
+                                <span class="text-xs text-red-500">*wajib dipilih</span>
+                            </Label>
                             <Field v-model="formValues.ambassador" name="ambassador" type="text"
                                 :rules="{ required: true }">
                                 <Popover v-model:open="openAmbassador">
                                     <PopoverTrigger as-child>
                                         <Button variant="outline" role="combobox" :aria-expanded="openAmbassador"
                                             class="w-full justify-between">
-                                            {{ formValues.ambassador ?
-                                                (availableAmbassadors.find(ambassador => ambassador.value.toString() ===
-                                                    formValues.ambassador)?.label) : 'Pilih Duta' }}
+                                            {{ formValues.ambassador ? availableAmbassadors.find((ambassador) =>
+                                                ambassador.label
+                                                ===
+                                                formValues.ambassador)?.label || 'Semua'
+                                                : 'Pilih Duta...' }}
                                             <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                         </Button>
                                     </PopoverTrigger>
                                     <PopoverContent class="md:w-auto lg:w-[300px] p-0">
                                         <Command v-model="formValues.ambassador">
-                                            <CommandInput placeholder="Cari Duta..." :value="formValues.ambassador ?
-                                                (availableAmbassadors.find(ambassador => ambassador.value.toString() ===
-                                                    formValues.ambassador)?.label) : '-'" />
+                                            <CommandInput placeholder="Cari Duta..." />
                                             <CommandEmpty>Tidak ada duta ditemukan.</CommandEmpty>
                                             <CommandList>
                                                 <CommandGroup>
                                                     <CommandItem v-for="ambassador in availableAmbassadors"
-                                                        :key="ambassador.value" :value="ambassador.value"
+                                                        :key="ambassador.value" :value="ambassador.label"
                                                         @select="openAmbassador = false"
                                                         class="overflow-hidden text-ellipsis">
                                                         <Check :class="[
                                                             'mr-2 h-4 w-4',
-                                                            formValues.ambassador === ambassador.value.toString() ? 'opacity-100' : 'opacity-0',
+                                                            formValues.ambassador === ambassador.label ? 'opacity-100' : 'opacity-0',
                                                         ]" />
                                                         {{ ambassador.label }}
                                                     </CommandItem>
@@ -183,7 +205,9 @@ watch(() => formValues.ambassador, (newValues) => {
                         </div>
 
                         <div>
-                            <Label for="donor">Nama donatur</Label>
+                            <Label for="donor">Nama donatur
+                                <span class="text-xs text-red-500">*wajib diisi</span>
+                            </Label>
                             <Field v-model="formValues.donor" name="donor" type="text" :rules="{ required: true }">
                                 <template v-slot="{ field }">
                                     <Input v-bind="field" placeholder="Nama donatur..." />
@@ -193,7 +217,9 @@ watch(() => formValues.ambassador, (newValues) => {
                         </div>
 
                         <div>
-                            <Label for="on_behalf_of">Donasi Atas Nama</Label>
+                            <Label for="on_behalf_of">Donasi Atas Nama
+                                <span class="text-xs text-red-500">*wajib diisi</span>
+                            </Label>
                             <Field v-model="formValues.on_behalf_of" name="on_behalf_of" type="text"
                                 :rules="{ required: true }">
                                 <template v-slot="{ field }">
@@ -204,10 +230,26 @@ watch(() => formValues.ambassador, (newValues) => {
                         </div>
 
                         <div>
-                            <Label for="amount">Jumlah donasi</Label>
+                            <Label for="amount">Jumlah donasi
+                                <span class="text-xs text-red-500">*wajib diisi</span>
+                            </Label>
                             <Field v-model="formValues.amount" name="amount" type="number" :rules="{ required: true }">
                                 <template v-slot="{ field }">
-                                    <Input v-bind="field" type="number" />
+                                    <!-- <Input v-bind="field" type="number" /> -->
+                                    <NumberField v-bind="field" name="amount" id="balance" :min="0" :default-value="0"
+                                        :format-options="{
+                                            style: 'currency',
+                                            currency: 'IDR',
+                                            currencyDisplay: 'code',
+                                            currencySign: 'accounting',
+                                            maximumFractionDigits: 0,
+                                        }" :step="10000">
+                                        <NumberFieldContent>
+                                            <NumberFieldDecrement />
+                                            <NumberFieldInput />
+                                            <NumberFieldIncrement />
+                                        </NumberFieldContent>
+                                    </NumberField>
                                 </template>
                             </Field>
                             <ErrorMessage class="text-red-500 text-sm" name="amount" />
@@ -215,7 +257,9 @@ watch(() => formValues.ambassador, (newValues) => {
 
                         <div>
                             <!-- cSpell:ignore Metode Donasi Pilih Tipe Pemayaran mandiri Mandiri lainnya Lainnya -->
-                            <Label for="payment_method">Metode Donasi</Label>
+                            <Label for="payment_method">Metode Donasi
+                                <span class="text-xs text-red-500">*wajib dipilih</span>
+                            </Label>
                             <Field v-model="formValues.payment_method" name="payment_method" type="select"
                                 :rules="{ required: true }">
                                 <template v-slot="{ field }">
@@ -236,7 +280,9 @@ watch(() => formValues.ambassador, (newValues) => {
                         </div>
 
                         <div>
-                            <Label for="type">Tipe Donasi</Label>
+                            <Label for="type">Tipe Donasi
+                                <span class="text-xs text-red-500">*wajib dipilih</span>
+                            </Label>
                             <Field v-model="formValues.type" name="type" type="select" :rules="{ required: true }">
                                 <template v-slot="{ field }">
                                     <Select v-bind="field" v-model="formValues.type"
@@ -254,6 +300,16 @@ watch(() => formValues.ambassador, (newValues) => {
                             <ErrorMessage class="text-red-500 text-sm" name="type" />
                         </div>
 
+                        <div>
+                            <Label for="proof">Bukti Transfer</Label>
+                            <Field v-model="formValues.proof" name="proof" type="file" :rules="{ required: false }">
+                                <template v-slot="{ field }">
+                                    <Input v-bind="field" type="file" class="dark:!text-white" />
+                                </template>
+                            </Field>
+                            <ErrorMessage class="text-red-500 text-sm" name="proof" />
+                        </div>
+
                         <div class="block mt-3 col-span-2 sm:w-2/5 sm:hidden">
                             <p class="font-semibold tracking-tight text-lg">Preview data</p>
                             <div class="my-2 p-3 rounded-lg border border-neutral-300 dark:border-neutral-600">
@@ -269,7 +325,9 @@ watch(() => formValues.ambassador, (newValues) => {
                                         <p
                                             class="font-semibold text-sm tracking-tight text-neutral-600 dark:text-neutral-400 -mb-1">
                                             Nama Duta</p>
-                                        <p class="first-letter:uppercase">{{ formValues.ambassador || '-' }}</p>
+                                        <p class="first-letter:uppercase">{{ formValues.ambassador ?
+                                            (availableAmbassadors.find(ambassador => ambassador.label ===
+                                                formValues.ambassador)?.label) : '-' }}</p>
                                     </div>
                                     <div>
                                         <p
@@ -287,7 +345,9 @@ watch(() => formValues.ambassador, (newValues) => {
                                         <p
                                             class="font-semibold text-sm tracking-tight text-neutral-600 dark:text-neutral-400 -mb-1">
                                             Jumlah Donasi</p>
-                                        <p class="first-letter:uppercase">{{ formValues.amount || '-' }}</p>
+                                        <p class="first-letter:uppercase">{{ formatCurrency(Number(formValues.amount))
+                                            || '-' }}
+                                        </p>
                                     </div>
                                     <div>
                                         <p
@@ -300,6 +360,25 @@ watch(() => formValues.ambassador, (newValues) => {
                                             class="font-semibold text-sm tracking-tight text-neutral-600 dark:text-neutral-400 -mb-1">
                                             Tipe Donasi</p>
                                         <p class="first-letter:uppercase">{{ formValues.type || '-' }}</p>
+                                    </div>
+
+                                    <div class="col-span-2">
+                                        <p
+                                            class="font-semibold text-sm tracking-tight text-neutral-600 dark:text-neutral-400 mb-1">
+                                            Bukti Pembayaran <span class="text-xs">(opsional)</span>
+                                        </p>
+                                        <div
+                                            v-if="formValues.proof && formValues.proof.type !== 'application/pdf' && filePreviewUrl">
+                                            <img :src="filePreviewUrl" alt="Bukti Transfer"
+                                                class="max-w-full max-h-56 h-auto rounded-lg" />
+                                        </div>
+                                        <div
+                                            v-else-if="formValues.proof && formValues.proof.type === 'application/pdf'">
+                                            <p>Bukti telah diunggah</p>
+                                        </div>
+                                        <div v-else>
+                                            <p>Tidak ada bukti yang diunggah</p>
+                                        </div>
                                     </div>
                                 </div>
                                 <p>Apabila anda sudah yakin anda dapat langsung menyimpan data</p>
@@ -359,7 +438,7 @@ watch(() => formValues.ambassador, (newValues) => {
                                     class="font-semibold text-sm tracking-tight text-neutral-600 dark:text-neutral-400 -mb-1">
                                     Nama Duta</p>
                                 <p class="first-letter:uppercase">{{ formValues.ambassador ?
-                                    (availableAmbassadors.find(ambassador => ambassador.value.toString() ===
+                                    (availableAmbassadors.find(ambassador => ambassador.label ===
                                         formValues.ambassador)?.label) : '-' }}</p>
                             </div>
                             <div>
@@ -378,7 +457,8 @@ watch(() => formValues.ambassador, (newValues) => {
                                 <p
                                     class="font-semibold text-sm tracking-tight text-neutral-600 dark:text-neutral-400 -mb-1">
                                     Jumlah Donasi</p>
-                                <p class="first-letter:uppercase">{{ formValues.amount || '-' }}</p>
+                                <p class="first-letter:uppercase">{{ formatCurrency(Number(formValues.amount)) || '-' }}
+                                </p>
                             </div>
                             <div>
                                 <p
@@ -391,6 +471,24 @@ watch(() => formValues.ambassador, (newValues) => {
                                     class="font-semibold text-sm tracking-tight text-neutral-600 dark:text-neutral-400 -mb-1">
                                     Tipe Donasi</p>
                                 <p class="first-letter:uppercase">{{ formValues.type || '-' }}</p>
+                            </div>
+
+                            <div class="col-span-2">
+                                <p
+                                    class="font-semibold text-sm tracking-tight text-neutral-600 dark:text-neutral-400 mb-1">
+                                    Bukti Pembayaran <span class="text-xs">(opsional)</span>
+                                </p>
+                                <div
+                                    v-if="formValues.proof && formValues.proof.type !== 'application/pdf' && filePreviewUrl">
+                                    <img :src="filePreviewUrl" alt="Bukti Transfer"
+                                        class="max-w-full max-h-56 h-auto rounded-lg" />
+                                </div>
+                                <div v-else-if="formValues.proof && formValues.proof.type === 'application/pdf'">
+                                    <p>Bukti telah diunggah</p>
+                                </div>
+                                <div v-else>
+                                    <p>Tidak ada bukti yang diunggah</p>
+                                </div>
                             </div>
                         </div>
                         <p>Apabila anda sudah yakin anda dapat langsung menyimpan data</p>

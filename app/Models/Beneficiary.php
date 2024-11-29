@@ -29,8 +29,11 @@ class Beneficiary extends Model
         'gender',
         'last_education',
         'school_grade',
+        'photo',
         'father',
+        'father_photo',
         'mother',
+        'mother_photo',
         'shirt_size',
         'shoe_size',
         'father_death_certificate_number',
@@ -75,6 +78,20 @@ class Beneficiary extends Model
     {
         if ($status && $status !== 'default') {
             return $query->where('status', $status);
+        }
+    }
+
+    public function scopeShirt($query, $shirt)
+    {
+        if ($shirt && ($shirt !== 'default' || $shirt !== '')) {
+            return $query->where('shirt_size', 'LIKE', '%' . $shirt . '%');
+        }
+    }
+
+    public function scopeShoe($query, $shoe)
+    {
+        if ($shoe && ($shoe !== 'default' || $shoe != 0)) {
+            return $query->where('shoe_size', $shoe);
         }
     }
 

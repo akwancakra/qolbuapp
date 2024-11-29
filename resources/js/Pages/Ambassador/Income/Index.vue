@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { defineProps, ref, computed } from "vue";
-import { Link } from "@inertiajs/vue3";
+import { defineProps, ref, computed, watch, Ref, onMounted } from "vue";
+import { Link, useForm, Head, usePage } from "@inertiajs/vue3";
 import { Button } from "@/Components/ui/button";
-import { Input } from "@/Components/ui/input";
 import { Label } from "@/Components/ui/label";
 import {
     Table,
@@ -16,7 +15,6 @@ import {
 import {
     Select,
     SelectContent,
-    SelectGroup,
     SelectItem,
     SelectTrigger,
     SelectValue,
@@ -33,6 +31,8 @@ import {
     DropdownMenuSubTrigger,
     DropdownMenuPortal,
     DropdownMenuSubContent,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
 } from "@/Components/ui/dropdown-menu";
 import {
     AlertDialog,
@@ -55,52 +55,85 @@ import {
     SheetIcon,
     ImageIcon,
     FilePlusIcon,
-    CalendarIcon,
+    ChevronsUpDown,
+    Check,
+    Loader2,
+    ReceiptTextIcon,
+    DatabaseIcon,
 } from "lucide-vue-next";
-import { Head } from "@inertiajs/vue3";
 import { BarChart } from "@/Components/ui/chart-bar";
 import { Checkbox } from "@/Components/ui/checkbox";
 // LOCAL COMPONENTS
-import { Transaction } from "@/types";
+import { Ambassador, PaginatedIncomes } from "@/types";
 import DashboardLayout from "@/Layouts/DashboardLayout.vue";
 import { useDateFormat } from "@vueuse/core";
-import { cn, formatCurrency, formatNumber } from "@/lib/utils";
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/Components/ui/popover";
-import { Calendar } from "@/Components/ui/calendar";
+import { formatCurrency, formatNumber, getImageUrl } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/Components/ui/tooltip";
+import {
+    CalendarDate,
+} from '@internationalized/date'
+import { DateRange } from "radix-vue";
+import { Popover, PopoverContent, PopoverTrigger } from "@/Components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/Components/ui/command";
+import { Inertia } from "@inertiajs/inertia";
+import { toast } from "vue-sonner";
+import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogScrollContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Separator } from "@/Components/ui/separator";
+import RangeCalendarIncome from "@/Pages/BoardMember/Income/_components/RangeCalendarIncome.vue";
+import TopAmbassadorTable from "@/Pages/BoardMember/Beneficiary/_components/TopAmbassadorTable.vue";
+import TopDonorTable from "@/Pages/BoardMember/Beneficiary/_components/TopDonorTable.vue";
+import IncomeBarChart from "@/Pages/BoardMember/Beneficiary/_components/IncomeBarChart.vue";
+import IncomeLineChart from "@/Pages/BoardMember/Beneficiary/_components/IncomeLineChart.vue";
+import PaginationComponent from "@/Pages/BoardMember/Income/_components/PaginationComponent.vue";
 
+// CREATIN INTERFACES FOR DATA
+interface TopAmbassador {
+    ambassador_id: number;
+    total_amount: number;
+    ambassador: Ambassador;
+}
+
+interface TopDonor {
+    donor: string;
+    total_amount: number;
+}
+
+const page = usePage();
 const props = defineProps<{
-    transactions: Transaction[];
+    incomes: PaginatedIncomes;
+    incomeTotalAmount: number;
+    availableTeamCodes: string[];
+    availableYears: string[];
+    availableAmbassadors: { label: string; value: string }[];
+    availableMonths: { label: string; value: string }[];
+    incomesInWeeks: { label: string; value: string; start: string; end: string }[];
+    topTenDonors: TopDonor[];
+    topTenAmbassadors: TopAmbassador[];
+    chartData: any;
+    filters: {
+        name: string;
+        team_code: string;
+        time: string;
+        start_range: string;
+        end_range: string;
+        week: string;
+        month: string;
+        year: string;
+        count_per_page: string;
+    };
 }>();
 
 // ========== SECTION 1 ==========
-// Buat reactive `value` untuk menyimpan tanggal
-const value = ref<Date | null>(null);
+const openAmbassador = ref(false);
+const openTeam = ref(false);
+const value = ref<DateRange>({
+    start: new CalendarDate(new Date().getFullYear(), new Date().getMonth() + 1, new Date().getDate()),
+    end: new CalendarDate(new Date().getFullYear(), new Date().getMonth() + 1, new Date().getDate()).add({ days: 7 }),
+}) as Ref<DateRange>
 
-// Gunakan Intl.DateTimeFormat untuk memformat tanggal
-const df = new Intl.DateTimeFormat('id-ID', {
-    dateStyle: 'long',
-});
-
-// Fungsi untuk memformat tanggal
-const formatDate = (date: Date | null) => {
-    if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
-        return "Pilih tanggal";
-    }
-    try {
-        return df.format(date);
-    } catch (error) {
-        console.error("Error formatting date:", error);
-        return "Pilih tanggal";
-    }
-};
-
+// ===============================
 // ========== SECTION 2 ==========
+// ===============================
 // State untuk mengontrol apakah konten utama ditampilkan atau tidak
 const showContentTwo = ref(false);
 
@@ -109,59 +142,144 @@ const toggleContentTwo = () => {
     showContentTwo.value = !showContentTwo.value;
 };
 
-// CHART DATA
-const data = [
-    { day: "17 Sen", pendapatan: Math.floor(Math.random() * 2000000) + 500000 },
-    { day: "18 Sel", pendapatan: Math.floor(Math.random() * 2000000) + 500000 },
-    { day: "19 Rab", pendapatan: Math.floor(Math.random() * 2000000) + 500000 },
-    { day: "20 Kam", pendapatan: Math.floor(Math.random() * 2000000) + 500000 },
-    { day: "21 Jum", pendapatan: Math.floor(Math.random() * 2000000) + 500000 },
-    { day: "22 Sab", pendapatan: Math.floor(Math.random() * 2000000) + 500000 },
-    { day: "23 Min", pendapatan: Math.floor(Math.random() * 2000000) + 500000 },
-];
-
+// ===============================
 // ========== SECTION 3 ==========
-// State untuk melacak checkbox yang dipilih
-const selectedTransactions = ref<number[]>([]);
+// ===============================
+// SEARCHING AND FILTERING
+// Form untuk pencarian dan filter
+const form = useForm({
+    name: 'default',
+    team_code: 'default',
+    time: 'monthly',
+    start_range: '',
+    end_range: '',
+    week: '',
+    month: '',
+    year: '',
+    count_per_page: '10'
+});
+
+onMounted(() => {
+    form.name = props.filters.name;
+    form.team_code = props.filters.team_code;
+    form.time = props.filters.time;
+    form.start_range = props.filters.start_range;
+    form.end_range = props.filters.end_range;
+    form.week = props.filters.week;
+    form.month = props.filters.month;
+    form.year = props.filters.year;
+    form.count_per_page = props.filters.count_per_page;
+
+    const flashMessage = (page.props.flash as { message?: string })?.message;
+    if (flashMessage) {
+        toast.success(flashMessage);
+    }
+});
+
+watch(() => value.value, (newValue) => {
+    if (newValue.start && newValue.end) {
+        form.start_range = newValue.start.toString();
+        form.end_range = newValue.end.toString();
+    }
+}, { deep: true });
+
+watch(() => form.data(), (newData) => {
+    form.get(route('ambassador.incomes.index'), {
+        preserveState: true,
+        data: newData,
+    });
+});
+
+// ========================================
+// ========== DATA TABLE SECTION ==========
+// ========================================
+const dropdownOpen = ref(false);
+const selectedIncomes = ref<number[]>([]);
 const clientLocale = ref(navigator.language || "en-US");
 
-// Computed property untuk menghitung jumlah akun yang dipilih
-const selectedCount = computed(() => selectedTransactions.value.length);
+// Update the related functions
+const selectedCount = computed(() => selectedIncomes.value.length);
 
-// Function untuk toggle checkbox
 const toggleCheckbox = (checked: boolean, id: number) => {
     if (checked) {
-        selectedTransactions.value.push(id);
+        selectedIncomes.value.push(id);
     } else {
-        selectedTransactions.value = selectedTransactions.value.filter(
-            (userId) => userId !== id
+        selectedIncomes.value = selectedIncomes.value.filter(
+            (incomeId) => incomeId !== id
         );
     }
 };
 
-// Function untuk export transaksi
-const exportTransactions = () => {
-    const transactionsToExport =
-        selectedTransactions.value.length > 0
-            ? selectedTransactions.value
-            : props.transactions.map((transaction) => transaction.id);
-    // : props.transactions.data.map(transaction => transaction.id);
+const toggleSelectAllCheckbox = (checked: boolean) => {
+    if (checked) {
+        const newIds = props.incomes.data.map(income => income.id);
+        selectedIncomes.value = [...new Set([...selectedIncomes.value, ...newIds])];
+    } else {
+        selectedIncomes.value = [];
+    }
+}
 
-    console.log("Exporting transactions with ids: ", transactionsToExport);
-    selectedTransactions.value = [];
+const areAllBeneficiariesSelected = computed(() => {
+    return props.incomes.data.length > 0 && props.incomes.data.every(income => selectedIncomes.value.includes(income.id));
+})
+
+const exportIncomes = () => {
+    const incomesToExport =
+        selectedIncomes.value.length > 0
+            ? selectedIncomes.value
+            : props.incomes.data.map((income) => income.id);
+
+    console.log("Exporting incomes with ids: ", incomesToExport);
+    selectedIncomes.value = [];
 };
+
+// CODE FOR PAGINATION
+const handlePageChange = (newPage: number) => {
+    form.get(route('ambassador.incomes.index', { page: newPage }), {
+        preserveState: true,
+    });
+};
+
+const secondaryTitlePage = computed(() => {
+    switch (form.time) {
+        case 'custom':
+            if (form.start_range && form.end_range) {
+                const startDate = new Date(form.start_range);
+                const endDate = new Date(form.end_range);
+                const startFormat = useDateFormat(startDate, "DD MMM", { locales: clientLocale }).value;
+                const endFormat = useDateFormat(endDate, "DD MMM YYYY", { locales: clientLocale }).value;
+
+                if (startDate.getFullYear() === endDate.getFullYear()) {
+                    if (startDate.getMonth() === endDate.getMonth()) {
+                        return `${useDateFormat(startDate, "DD", { locales: clientLocale }).value} - ${endFormat}`;
+                    }
+                    return `${startFormat} - ${useDateFormat(endDate, "DD MMM YYYY", { locales: clientLocale }).value}`;
+                }
+                return `${startFormat} - ${endFormat}`;
+            }
+            return 'Kustom';
+        case 'weekly':
+            return form.week ? props.incomesInWeeks.find((week) => week.value === form.week)?.label : 'Mingguan';
+        case 'monthly':
+            return form.month && form.year ? `${props.availableMonths.find((month) => month.value === form.month)?.label} ${form.year}` : 'Bulanan';
+        case 'yearly':
+            return form.year ? `Year ${form.year}` : 'Tahunan';
+        default:
+            return 'Keseluruhan';
+    }
+});
 </script>
 
 <template>
 
     <Head>
-        <title>Pendapatan Transferan</title>
+        <title>Daftar Pendapatan</title>
     </Head>
 
     <DashboardLayout :containerClass="'max-w-screen-2xl'">
         <template #header>
             <h1 class="text-xl font-semibold tracking-tight">
-                Pendapatan Transferan
+                Daftar Pendapatan
             </h1>
         </template>
 
@@ -169,84 +287,175 @@ const exportTransactions = () => {
             <div class="flex justify-between items-center mb-3">
                 <div>
                     <p class="font-semibold text-2xl tracking-tight">
-                        Transferan Minggu 1 Sept
+                        Pendapatan {{ secondaryTitlePage }}
                     </p>
                     <p class="text-sm text-neutral-500 dark:text-neutral-400">
-                        Lorem ipsum, dolor sit amet consectetur adipisicing
-                        elit. Eveniet veniam, vero omnis dolores temporibus sed?
+                        Daftar pendapatan yang telah ada pada range terpilih
                     </p>
                 </div>
             </div>
 
             <div class="grid gap-3 grid-cols-2 md:grid-cols-4">
+                <!-- Duta -->
                 <div>
-                    <Label for="name">Nama Duta</Label>
-                    <Input type="text" id="name" placeholder="Cari nama duta..." />
-                </div>
-                <div>
-                    <Label for="type">Tim</Label>
-                    <Select>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Pilih Tim" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectGroup>
-                                <SelectItem value="default">Semua</SelectItem>
-                                <SelectItem value="one">Tim 99</SelectItem>
-                                <SelectItem value="two">Tim 98</SelectItem>
-                                <SelectItem value="three">Tim 97</SelectItem>
-                                <SelectItem value="four">Tim 96</SelectItem>
-                            </SelectGroup>
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div>
-                    <Label for="type">Tipe Waktu</Label>
-                    <Select>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Pilih Waktu" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectGroup>
-                                <SelectItem value="default">Default (Per-bulan)</SelectItem>
-                                <SelectItem value="weekly">Per-minggu</SelectItem>
-                                <SelectItem value="monthly">Per-bulan</SelectItem>
-                                <SelectItem value="yearly">Per-tahun</SelectItem>
-                            </SelectGroup>
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div>
-                    <Label for="type">Tanggal</Label>
-                    <Popover>
+                    <Label for="team">Duta</Label>
+                    <Popover v-model:open="openAmbassador">
                         <PopoverTrigger as-child>
-                            <Button variant="outline" :class="cn(
-                                'w-full justify-start text-left font-normal',
-                                !value && 'text-muted-foreground'
-                            )">
-                                <CalendarIcon class="mr-2 h-4 w-4" />
-                                {{ formatDate(value) }}
+                            <Button variant="outline" role="combobox" :aria-expanded="openAmbassador"
+                                class="w-full justify-between">
+                                {{ form.name ? availableAmbassadors.find((ambassador) => ambassador.label ===
+                                    form.name)?.label || 'Semua'
+                                    : 'Pilih Duta...' }}
+                                <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                         </PopoverTrigger>
-                        <PopoverContent class="w-auto p-0">
-                            <Calendar v-model="value" :initial-focus="true" />
+                        <PopoverContent class="md:w-auto lg:w-[300px] p-0">
+                            <Command v-model="form.name">
+                                <CommandInput placeholder="Cari Duta..." />
+                                <CommandEmpty>Tidak ada duta ditemukan.</CommandEmpty>
+                                <CommandList>
+                                    <CommandGroup>
+                                        <CommandItem value="default" @select="openAmbassador = false">
+                                            <Check :class="[
+                                                'mr-2 h-4 w-4',
+                                                form.name === 'default' ? 'opacity-100' : 'opacity-0',]" />
+                                            Semua
+                                        </CommandItem>
+                                        <CommandItem v-for="ambassador in availableAmbassadors" :key="ambassador.value"
+                                            :value="ambassador.label" @select="openAmbassador = false"
+                                            class="overflow-hidden text-ellipsis">
+                                            <Check :class="[
+                                                'mr-2 h-4 w-4',
+                                                form.name === ambassador.label ? 'opacity-100' : 'opacity-0',
+                                            ]" />
+                                            {{ ambassador.label }}
+                                        </CommandItem>
+                                    </CommandGroup>
+                                </CommandList>
+                            </Command>
                         </PopoverContent>
                     </Popover>
                 </div>
+
+                <!-- Tim -->
+                <div>
+                    <Label for="team">Tim</Label>
+                    <Popover v-model:open="openTeam">
+                        <PopoverTrigger as-child>
+                            <Button variant="outline" role="combobox" :aria-expanded="openTeam"
+                                class="w-full justify-between">
+                                {{ form.team_code
+                                    ? (form.team_code === 'default' ? 'Semua' : form.team_code)
+                                    : 'Pilih Tim...' }}
+                                <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent class="md:w-auto lg:w-[300px] p-0">
+                            <Command v-model="form.team_code">
+                                <CommandInput placeholder="Cari Tim..." />
+                                <CommandEmpty>Tidak ada tim ditemukan.</CommandEmpty>
+                                <CommandList>
+                                    <CommandGroup>
+                                        <CommandItem value="default" @select="openTeam = false">
+                                            <Check :class="[
+                                                'mr-2 h-4 w-4',
+                                                form.team_code === 'default' ? 'opacity-100' : 'opacity-0',]" />
+                                            Semua
+                                        </CommandItem>
+                                        <CommandItem v-for="team in availableTeamCodes" :key="team" :value="team"
+                                            @select="openTeam = false" class="overflow-hidden text-ellipsis">
+                                            <Check :class="[
+                                                'mr-2 h-4 w-4',
+                                                form.team_code === team ? 'opacity-100' : 'opacity-0',
+                                            ]" />
+                                            {{ team }}
+                                        </CommandItem>
+                                    </CommandGroup>
+                                </CommandList>
+                            </Command>
+                        </PopoverContent>
+                    </Popover>
+                </div>
+
+                <!-- Tipe Waktu -->
+                <div>
+                    <Label for="time">Tipe Waktu</Label>
+                    <Select v-model="form.time">
+                        <SelectTrigger>
+                            <SelectValue :placeholder="form.time || 'Pilih Tipe Waktu'" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="default">Semua Data</SelectItem>
+                            <SelectItem value="custom">Kustom</SelectItem>
+                            <SelectItem value="weekly">Per-minggu</SelectItem>
+                            <SelectItem value="monthly">Per-bulan</SelectItem>
+                            <SelectItem value="yearly">Per-tahun</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                <!-- Input Berdasarkan Tipe -->
+                <div v-if="form.time && form.time !== 'default'">
+                    <Label for="dateRange">Tanggal</Label>
+                    <!-- Custom -->
+                    <div v-if="form.time === 'custom'">
+                        <RangeCalendarIncome v-model="value" :clientLocale="'id'" />
+                    </div>
+
+                    <!-- Per-minggu -->
+                    <div v-if="form.time === 'weekly'">
+                        <Select v-model="form.week">
+                            <SelectTrigger>
+                                <SelectValue :placeholder="form.week || 'Pilih Minggu'" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem v-for="week in props.incomesInWeeks" :key="week.value" :value="week.value">
+                                    {{ week.label }}
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <!-- Per-bulan -->
+                    <div v-if="form.time === 'monthly'" class="flex gap-2">
+                        <Select v-model="form.year">
+                            <SelectTrigger>
+                                <SelectValue :placeholder="form.year || 'Pilih Tahun'" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem v-for="year in availableYears" :key="year" :value="year">
+                                    {{ year }}
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <Select v-model="form.month">
+                            <SelectTrigger>
+                                <SelectValue :placeholder="form.month || 'Pilih Bulan'" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem v-for="month in availableMonths" :key="month.value" :value="month.value">
+                                    {{ month.label }}
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <!-- Per-tahun -->
+                    <div v-if="form.time === 'yearly'">
+                        <Select v-model="form.year">
+                            <SelectTrigger>
+                                <SelectValue :placeholder="form.year || 'Pilih Tahun'" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem v-for="year in availableYears" :key="year" :value="year">
+                                    {{ year }}
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
             </div>
         </section>
-
-        <!-- <section class="bg-white p-3 rounded-lg mb-3 dark:bg-neutral-800">
-            <div>
-                <p class="font-semibold text-2xl tracking-tight">
-                    Keseluruhan Per-Bulan
-                </p>
-                <p class="text-sm text-neutral-500">
-                    Lorem ipsum, dolor sit amet consectetur adipisicing
-                    elit. Eveniet veniam, vero omnis dolores temporibus sed?
-                </p>
-            </div>
-        </section> -->
 
         <section class="bg-white p-3 rounded-lg mb-3 dark:bg-neutral-800">
             <div :class="[
@@ -255,11 +464,10 @@ const exportTransactions = () => {
             ]">
                 <div>
                     <p class="font-semibold text-2xl tracking-tight">
-                        Overview Minggu 1 Sept
+                        Overview {{ secondaryTitlePage }}
                     </p>
                     <p class="text-sm text-neutral-500 dark:text-neutral-400">
-                        Lorem ipsum, dolor sit amet consectetur adipisicing
-                        elit. Eveniet veniam, vero omnis dolores temporibus sed?
+                        Berikut adalah data yang telah diproses menjadi tabel dan chart
                     </p>
                 </div>
 
@@ -270,106 +478,63 @@ const exportTransactions = () => {
             </div>
 
             <div class="my-3 border border-neutral-300 p-2 rounded-lg dark:border-neutral-600">
-                <p class="text-sm text-neutral-500 -mb-1 dark:text-neutral-400">Total transferan pada minggu 1 sept</p>
-                <p class="font-semibold text-2xl tracking-tight break-words">Rp32.000.000</p>
+                <p class="text-sm text-neutral-500 -mb-1 dark:text-neutral-400">Total transferan pada {{
+                    secondaryTitlePage }}
+                </p>
+                <p class="font-semibold text-2xl tracking-tight break-words">{{ formatCurrency(incomeTotalAmount) }}</p>
             </div>
 
             <!-- Transition untuk smooth animasi -->
             <transition name="slide-fade">
                 <!-- SHOW HIDE DISINI -->
                 <div v-if="showContentTwo" class="grid gap-2 lg:grid-cols-2">
-                    <div>
-                        <BarChart :data="data" index="day" :categories="['pendapatan']" :y-formatter="(tick) => {
-                            return typeof tick === 'number'
-                                ? `Rp ${new Intl.NumberFormat(
-                                    'id-ID'
-                                ).format(tick)}`
-                                : '';
-                        }
-                            " :colors="['#58bb69']" />
-                    </div>
                     <div class="p-2 border border-neutral-300 rounded-lg dark:border-neutral-700">
-                        <p class="text-center font-semibold tracking-tight">Top 10 Duta - Minggu 1 Sept</p>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead class="h-8">#</TableHead>
-                                    <TableHead class="h-8">Nama</TableHead>
-                                    <TableHead class="h-8">Nominal</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                <TableRow class="bg-yellow-100 font-semibold dark:bg-yellow-500 dark:text-yellow-100">
-                                    <TableCell class="py-1.5">1</TableCell>
-                                    <TableCell class="py-1.5">Josephine Lily</TableCell>
-                                    <TableCell class="py-1.5">Rp10.000.000</TableCell>
-                                </TableRow>
-                                <TableRow class="bg-gray-100 font-semibold dark:bg-gray-500 dark:text-gray-100">
-                                    <TableCell class="py-1.5">2</TableCell>
-                                    <TableCell class="py-1.5">Andreas Thon</TableCell>
-                                    <TableCell class="py-1.5">Rp9.500.000</TableCell>
-                                </TableRow>
-                                <TableRow
-                                    class="bg-yellow-700 text-white font-semibold dark:bg-yellow-800 dark:text-yellow-100 hover:text-white hover:bg-yellow-800">
-                                    <TableCell class="py-1.5">3</TableCell>
-                                    <TableCell class="py-1.5">Andreas Thon</TableCell>
-                                    <TableCell class="py-1.5">Rp9.500.000</TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell class="py-1.5">4</TableCell>
-                                    <TableCell class="py-1.5">Andreas Thon</TableCell>
-                                    <TableCell class="py-1.5">Rp9.500.000</TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell class="py-1.5">5</TableCell>
-                                    <TableCell class="py-1.5">Andreas Thon</TableCell>
-                                    <TableCell class="py-1.5">Rp9.500.000</TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell class="py-1.5">6</TableCell>
-                                    <TableCell class="py-1.5">Andreas Thon</TableCell>
-                                    <TableCell class="py-1.5">Rp9.500.000</TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell class="py-1.5">7</TableCell>
-                                    <TableCell class="py-1.5">Andreas Thon</TableCell>
-                                    <TableCell class="py-1.5">Rp9.500.000</TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell class="py-1.5">8</TableCell>
-                                    <TableCell class="py-1.5">Andreas Thon</TableCell>
-                                    <TableCell class="py-1.5">Rp9.500.000</TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell class="py-1.5">9</TableCell>
-                                    <TableCell class="py-1.5">Andreas Thon</TableCell>
-                                    <TableCell class="py-1.5">Rp9.500.000</TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell class="py-1.5">10</TableCell>
-                                    <TableCell class="py-1.5">Andreas Thon</TableCell>
-                                    <TableCell class="py-1.5">Rp9.500.000</TableCell>
-                                </TableRow>
-                            </TableBody>
-                        </Table>
-                        <!-- <ul class="list-inside list-decimal">
-                            <li class="font-semibold text-lg">
-                                Josephine Lily - Rp10.000.000
-                            </li>
-                            <li>Andreas Thon - Rp10.000.000</li>
-                            <li>Wocky Minu - Rp10.000.000</li>
-                            <li>Borodin Dmitry - Rp10.000.000</li>
-                            <li>Josephine Lily - Rp10.000.000</li>
-                            <li>Andreas Thon - Rp10.000.000</li>
-                            <li>Wocky Minu - Rp10.000.000</li>
-                            <li>Borodin Dmitry - Rp10.000.000</li>
-                            <li>Josephine Lily - Rp10.000.000</li>
-                            <li>Andreas Thon - Rp10.000.000</li>
-                        </ul> -->
+                        <p class="text-center font-semibold tracking-tight break-words">Top 10 Duta - {{
+                            secondaryTitlePage }}
+                        </p>
+                        <TopAmbassadorTable :top-ambassadors="topTenAmbassadors" />
                     </div>
-                    <!-- <div class="flex justify-center items-center bg-neutral-200">
-                        <p>Data 2</p>
+                    <div class="p-2 border border-neutral-300 rounded-lg break-words dark:border-neutral-700">
+                        <p class="text-center font-semibold tracking-tight">Top 10 Donatur - {{ secondaryTitlePage }}
+                        </p>
+                        <TopDonorTable :top-donors="topTenDonors" />
+                    </div>
+                    <!-- <div class="col-span-2 my-3">
+                        <Tabs default-value="daily">
+                            <TabsList>
+                                <TabsTrigger value="daily">
+                                    Harian
+                                </TabsTrigger>
+                                <TabsTrigger value="weekly">
+                                    Bulanan
+                                </TabsTrigger>
+                                <TabsTrigger value="monthly">
+                                    Mingguan
+                                </TabsTrigger>
+                                <TabsTrigger value="yearly">
+                                    Tahunan
+                                </TabsTrigger>
+                            </TabsList>
+                            <TabsContent value="daily">
+                                Daily contect goes here
+                            </TabsContent>
+                            <TabsContent value="weekly">
+                                Weekly content goes here
+                            </TabsContent>
+                            <TabsContent value="monthly">
+                                Monthly content goes here
+                            </TabsContent>
+                            <TabsContent value="yearly">
+                                Yearly content goes here
+                            </TabsContent>
+                        </Tabs>
                     </div> -->
+                    <div>
+                        <IncomeBarChart :chart-data="chartData" />
+                    </div>
+                    <div>
+                        <IncomeLineChart :chart-data="chartData" />
+                    </div>
                 </div>
             </transition>
 
@@ -383,35 +548,62 @@ const exportTransactions = () => {
 
             <div class="mb-3 flex items-center justify-between">
                 <p v-if="selectedCount > 0" class="font-semibold tracking-tight text-lg">
-                    ({{ selectedCount }}) transaksi dipilih
+                    ({{ selectedCount }}) pendapatan dipilih
                 </p>
                 <p v-else class="font-semibold tracking-tight text-lg">
-                    Data Transaksi
+                    Data Pendapatan
                 </p>
                 <div class="flex gap-2">
-                    <DropdownMenu>
+                    <DropdownMenu :open="dropdownOpen" @update:open="dropdownOpen = $event">
                         <DropdownMenuTrigger as-child>
                             <Button variant="outline" class="gap-2">
-                                <p>Export Transferan</p>
-                                <!-- <EllipsisIcon :size="18" /> -->
+                                <p>Menu</p>
+                                <EllipsisIcon :size="18" />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Pilih aksi</DropdownMenuLabel>
+                            <DropdownMenuLabel>Aksi menu</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem class="cursor-pointer gap-1" @click="exportTransactions">
-                                <FileTextIcon :size="18" />
-                                Export PDF
-                            </DropdownMenuItem>
-                            <DropdownMenuItem class="cursor-pointer gap-1" @click="exportTransactions">
-                                <SheetIcon :size="18" /> Export
-                                Excel
-                            </DropdownMenuItem>
-                            <DropdownMenuItem class="cursor-pointer gap-1" @click="exportTransactions">
-                                <ImageIcon :size="18" />Export
-                                JPG
-                            </DropdownMenuItem>
-                            <!-- <DropdownMenuGroup>
+                            <DropdownMenuGroup>
+                                <DropdownMenuItem>
+                                    <Link :href="route(
+                                        'ambassador.incomes.create'
+                                    )
+                                        " class="flex items-center gap-1">
+                                    <FilePlusIcon :size="18" />
+                                    <p>Tambah transaksi</p>
+                                    </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuSub>
+                                    <DropdownMenuSubTrigger class="gap-1">
+                                        <DatabaseIcon :size="18" />
+                                        <p>Tampil data</p>
+                                    </DropdownMenuSubTrigger>
+                                    <DropdownMenuPortal>
+                                        <DropdownMenuSubContent>
+                                            <DropdownMenuRadioGroup v-model="form.count_per_page">
+                                                <DropdownMenuRadioItem value="0" class="cursor-pointer gap-1">
+                                                    <FileTextIcon :size="18" /> Semua data
+                                                </DropdownMenuRadioItem>
+                                                <DropdownMenuRadioItem value="10" class="cursor-pointer gap-1">
+                                                    <FileTextIcon :size="18" /> 10 data
+                                                </DropdownMenuRadioItem>
+                                                <DropdownMenuRadioItem value="20" class="cursor-pointer gap-1">
+                                                    <FileTextIcon :size="18" /> 20 data
+                                                </DropdownMenuRadioItem>
+                                                <DropdownMenuRadioItem value="30" class="cursor-pointer gap-1">
+                                                    <FileTextIcon :size="18" /> 30 data
+                                                </DropdownMenuRadioItem>
+                                                <DropdownMenuRadioItem value="40" class="cursor-pointer gap-1">
+                                                    <FileTextIcon :size="18" /> 40 data
+                                                </DropdownMenuRadioItem>
+                                                <DropdownMenuRadioItem value="50" class="cursor-pointer gap-1">
+                                                    <FileTextIcon :size="18" /> 50 data
+                                                </DropdownMenuRadioItem>
+                                            </DropdownMenuRadioGroup>
+                                        </DropdownMenuSubContent>
+                                    </DropdownMenuPortal>
+                                </DropdownMenuSub>
                                 <DropdownMenuSub>
                                     <DropdownMenuSubTrigger class="gap-1">
                                         <DownloadIcon :size="18" />
@@ -419,22 +611,22 @@ const exportTransactions = () => {
                                     </DropdownMenuSubTrigger>
                                     <DropdownMenuPortal>
                                         <DropdownMenuSubContent>
-                                            <DropdownMenuItem class="cursor-pointer gap-1" @click="exportTransactions">
+                                            <DropdownMenuItem class="cursor-pointer gap-1" @click="exportIncomes">
                                                 <FileTextIcon :size="18" />
                                                 Export PDF
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem class="cursor-pointer gap-1" @click="exportTransactions">
+                                            <DropdownMenuItem class="cursor-pointer gap-1" @click="exportIncomes">
                                                 <SheetIcon :size="18" /> Export
                                                 Excel
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem class="cursor-pointer gap-1" @click="exportTransactions">
+                                            <DropdownMenuItem class="cursor-pointer gap-1" @click="exportIncomes">
                                                 <ImageIcon :size="18" />Export
                                                 JPG
                                             </DropdownMenuItem>
                                         </DropdownMenuSubContent>
                                     </DropdownMenuPortal>
                                 </DropdownMenuSub>
-                            </DropdownMenuGroup> -->
+                            </DropdownMenuGroup>
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
@@ -442,10 +634,16 @@ const exportTransactions = () => {
 
             <div>
                 <Table>
-                    <TableCaption>List dari data transaksi Qolbu App.</TableCaption>
+                    <TableCaption v-if="incomes.data.length > 0" class="mb-3">List dari data transaksi Qolbu App.
+                    </TableCaption>
                     <TableHeader>
                         <TableRow>
-                            <TableHead></TableHead>
+                            <Label for="checkAll">
+                                <TableHead class="p-3">
+                                    <Checkbox id="checkAll" :checked="areAllBeneficiariesSelected"
+                                        @update:checked="toggleSelectAllCheckbox" />
+                                </TableHead>
+                            </Label>
                             <TableHead>#</TableHead>
                             <TableHead class="min-w-[120px]">Tgl Submit</TableHead>
                             <TableHead class="min-w-[120px]">Tgl Transfer</TableHead>
@@ -460,21 +658,24 @@ const exportTransactions = () => {
                             <TableHead>Total</TableHead>
                             <TableHead>FKY</TableHead>
                             <TableHead>Hak</TableHead>
+                            <TableHead>Bukti</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        <TableRow v-for="(transaction, index) in transactions" :key="index"
+                        <!-- IF DATA IS EMPTY -->
+                        <TableRow v-if="incomes.data.length === 0">
+                            <TableCell class="p-3" :colspan="15">
+                                <p class="text-center text-neutral-500 dark:text-neutral-400">
+                                    Tidak ada data pendapatan yang ditemukan.
+                                </p>
+                            </TableCell>
+                        </TableRow>
+                        <!-- IF DATA IS EXIST -->
+                        <TableRow v-else v-for="(income, index) in incomes.data" :key="index"
                             class="odd:bg-neutral-100 even:bg-white dark:even:bg-neutral-700 dark:odd:bg-neutral-800">
                             <TableCell class="p-3">
-                                <Checkbox :id="`transaction-${transaction.id}`" :checked="selectedTransactions.includes(
-                                    transaction.id
-                                )
-                                    " @update:checked="(checked) =>
-                                        toggleCheckbox(
-                                            checked,
-                                            transaction.id
-                                        )
-                                        " />
+                                <Checkbox :id="`income-${income.id}`" :checked="selectedIncomes.includes(income.id)"
+                                    @update:checked="(checked) => toggleCheckbox(checked, income.id)" />
                             </TableCell>
                             <TableCell>{{ index + 1 }}</TableCell>
                             <TableCell>
@@ -482,7 +683,7 @@ const exportTransactions = () => {
                                     <Tooltip>
                                         <TooltipTrigger>{{
                                             useDateFormat(
-                                                transaction.created_at,
+                                                income.created_at,
                                                 "DD MMM YYYY",
                                                 {
                                                     locales: clientLocale,
@@ -492,7 +693,7 @@ const exportTransactions = () => {
                                         <TooltipContent>
                                             <p>{{
                                                 useDateFormat(
-                                                    transaction.created_at,
+                                                    income.created_at,
                                                     "HH:MM:ss, DD MMM YYYY",
                                                     {
                                                         locales: clientLocale,
@@ -508,7 +709,7 @@ const exportTransactions = () => {
                                     <Tooltip>
                                         <TooltipTrigger>{{
                                             useDateFormat(
-                                                transaction.transfer_date,
+                                                income.transfer_date,
                                                 "DD MMM YYYY",
                                                 {
                                                     locales: clientLocale,
@@ -518,7 +719,7 @@ const exportTransactions = () => {
                                         <TooltipContent>
                                             <p>{{
                                                 useDateFormat(
-                                                    transaction.transfer_date,
+                                                    income.transfer_date,
                                                     "HH:MM:ss, DD MMM YYYY",
                                                     {
                                                         locales: clientLocale,
@@ -529,61 +730,107 @@ const exportTransactions = () => {
                                     </Tooltip>
                                 </TooltipProvider>
                             </TableCell>
-                            <TableCell>{{ transaction.duta }}</TableCell>
-                            <TableCell>{{ transaction.donatur }}</TableCell>
-                            <TableCell>{{ transaction.metode }}</TableCell>
-                            <TableCell>{{ transaction.jenis }}</TableCell>
+                            <TableCell>{{ income.ambassador?.name }}</TableCell>
+                            <TableCell>{{ income.donor }}</TableCell>
+                            <TableCell>{{ income.payment_method }}</TableCell>
+                            <TableCell>{{ income.type }}</TableCell>
                             <TableCell>{{
-                                formatNumber(transaction.nominal)
+                                formatNumber(income.amount)
                                 }}</TableCell>
                             <TableCell>{{
-                                formatNumber(transaction.nominal * 0.2)
+                                formatNumber(income.amount * 0.2)
                                 }}</TableCell>
                             <TableCell>{{
-                                formatNumber(transaction.nominal - (transaction.nominal * 0.2))
+                                formatNumber(income.amount - (income.amount * 0.2))
                                 }}</TableCell>
                             <TableCell>{{
-                                formatNumber((transaction.nominal - (transaction.nominal * 0.2)) * 0.5)
+                                formatNumber((income.amount - (income.amount * 0.2)) * 0.5)
                                 }}</TableCell>
                             <TableCell>{{
-                                formatNumber((transaction.nominal - (transaction.nominal * 0.2)) - ((transaction.nominal
-                                    - (transaction.nominal * 0.2)) * 0.5))
+                                formatNumber((income.amount - (income.amount * 0.2)) - ((income.amount
+                                    - (income.amount * 0.2)) * 0.5))
                             }}</TableCell>
                             <TableCell>{{
-                                formatNumber(((transaction.nominal - (transaction.nominal * 0.2)) -
-                                    ((transaction.nominal
-                                        - (transaction.nominal * 0.2)) * 0.5)) * 0.2)
+                                formatNumber(((income.amount - (income.amount * 0.2)) -
+                                    ((income.amount
+                                        - (income.amount * 0.2)) * 0.5)) * 0.2)
                             }}</TableCell>
                             <TableCell>{{
-                                formatNumber((transaction.nominal - (transaction.nominal * 0.2)) - ((transaction.nominal
-                                    - (transaction.nominal * 0.2)) * 0.5) - (((transaction.nominal - (transaction.nominal *
+                                formatNumber((income.amount - (income.amount * 0.2)) - ((income.amount
+                                    - (income.amount * 0.2)) * 0.5) - (((income.amount - (income.amount *
                                         0.2)) -
-                                        ((transaction.nominal
-                                            - (transaction.nominal * 0.2)) * 0.5)) * 0.2))
+                                        ((income.amount
+                                            - (income.amount * 0.2)) * 0.5)) * 0.2))
                             }}</TableCell>
+                            <TableCell class="p-3">
+                                <Dialog>
+                                    <DialogTrigger as-child>
+                                        <Button size="icon" variant="outline" :disabled="income.proof === null">
+                                            <ReceiptTextIcon :size="18" />
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogScrollContent>
+                                        <DialogHeader>
+                                            <DialogTitle>Bukti Pendapatan</DialogTitle>
+                                        </DialogHeader>
+                                        <div>
+                                            <Separator class="my-2 dark:bg-neutral-600" />
+                                            <div class="grid grid-cols-2 gap-2">
+                                                <div>
+                                                    <p
+                                                        class="font-semibold text-sm tracking-tight text-neutral-600 dark:text-neutral-400 -mb-1">
+                                                        Duta</p>
+                                                    <p>{{ income.ambassador?.name }}</p>
+                                                </div>
+                                                <div>
+                                                    <p
+                                                        class="font-semibold text-sm tracking-tight text-neutral-600 dark:text-neutral-400 -mb-1">
+                                                        Donatur</p>
+                                                    <p>{{ income.donor }}</p>
+                                                </div>
+                                                <div>
+                                                    <p
+                                                        class="font-semibold text-sm tracking-tight text-neutral-600 dark:text-neutral-400 -mb-1">
+                                                        Atas Nama</p>
+                                                    <p>{{ income.on_behalf_of }}</p>
+                                                </div>
+                                                <div>
+                                                    <p
+                                                        class="font-semibold text-sm tracking-tight text-neutral-600 dark:text-neutral-400 -mb-1">
+                                                        Nominal</p>
+                                                    <p>{{ formatCurrency(income.amount) }}</p>
+                                                </div>
+                                                <div class="col-span-2">
+                                                    <p
+                                                        class="font-semibold text-sm tracking-tight text-neutral-600 dark:text-neutral-400 mb-1">
+                                                        Bukti Pendapatan</p>
+                                                    <div v-if="income.proof">
+                                                        <img :src="getImageUrl(`proof/${income.proof}`)"
+                                                            class="w-full rounded-lg" />
+                                                    </div>
+                                                    <div v-else>
+                                                        <p>Tidak unggah bukti pembayaran</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <DialogFooter>
+                                            <DialogClose>
+                                                <Button variant="outline">
+                                                    Tutup
+                                                </Button>
+                                            </DialogClose>
+                                        </DialogFooter>
+                                    </DialogScrollContent>
+                                </Dialog>
+                            </TableCell>
                         </TableRow>
                     </TableBody>
                 </Table>
 
-                <!-- <Pagination v-slot="{ page }" :total="transactions.total" :sibling-count="1" show-edges
-                    :default-page="transactions.current_page">
-                    <PaginationList v-slot="{ items }" class="flex items-center gap-1">
-                        <PaginationFirst />
-                        <PaginationPrev />
-
-                        <template v-for="(item, index) in items">
-                            <PaginationListItem v-if="item.type === 'page'" :key="index" :value="item.value" as-child>
-                                <Button class="w-10 h-10 p-0" :variant="item.value === page ? 'default' : 'outline'">
-                                    {{ item.value }}
-                                </Button>
-                            </PaginationListItem>
-                            <PaginationEllipsisIcon v-else :key="item.type" :index="index" />
-                        </template>
-
-                        <PaginationNext />
-                        <PaginationLast />
-                    </PaginationList>
-                </Pagination> -->
+                <!-- <pre>{{ incomes }}</pre> -->
+                <PaginationComponent :pagination="props.incomes" @page-change="handlePageChange" />
             </div>
         </section>
     </DashboardLayout>

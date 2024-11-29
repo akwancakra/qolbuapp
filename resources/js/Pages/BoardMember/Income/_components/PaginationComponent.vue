@@ -86,7 +86,7 @@ const goToPage = (page: number) => {
 </script>
 
 <template>
-    <Pagination class="mt-5 flex justify-center">
+    <Pagination class="w-full mt-5 flex justify-center">
         <PaginationList class="flex items-center gap-1">
             <!-- Tombol Previous -->
             <Button :disabled="pagination.current_page === 1" @click="goToPage(pagination.current_page - 1)"

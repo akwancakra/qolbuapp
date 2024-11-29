@@ -23,6 +23,7 @@ class Income extends Model
         'payment_method',
         'type',
         'on_behalf_of',
+        'proof'
     ];
 
     public function ambassador()

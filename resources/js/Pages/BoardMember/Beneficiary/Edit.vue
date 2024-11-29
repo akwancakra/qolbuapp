@@ -3,11 +3,11 @@ import { Head, Link } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 import { ErrorMessage, Field, Form } from 'vee-validate';
 import { toTypedSchema } from '@vee-validate/zod';
-import { ref, reactive, onMounted } from 'vue';
-import { Label } from '@/components/ui/label';
+import { ref, reactive, onMounted, computed } from 'vue';
+import { Label } from '@/Components/ui/label';
 import { Input } from '@/Components/ui/input';
 import { Separator } from '@/Components/ui/separator';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/Components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/Components/ui/alert-dialog';
 import * as zod from 'zod';
 import { AlertCircle, CornerUpLeftIcon, Loader2, Save } from 'lucide-vue-next';
@@ -17,6 +17,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/Components/ui/textarea';
 import { Beneficiary } from '@/types';
 import { useDateFormat } from '@vueuse/core';
+import { getImageUrl } from '@/lib/utils';
+import { toast } from 'vue-sonner';
 
 const props = defineProps<{
     beneficiary: Beneficiary;
@@ -38,8 +40,23 @@ const validationSchema = toTypedSchema(
         school_grade: zod.string().min(1, { message: 'Kelas sekolah wajib diisi' }),
         shirt_size: zod.string().optional(),
         shoe_size: zod.number().optional(),
+        photo: zod.any().refine((file) => {
+            if (!file) return true;
+            const acceptedFormats = ['image/jpeg', 'image/png'];
+            return file.size <= 1048576 && acceptedFormats.includes(file.type);
+        }, { message: 'Foto anak harus berupa file jpg, jpeg, atau png dan maksimal 1MB' }),
         father: zod.string().min(1, { message: 'Nama ayah wajib diisi' }),
+        father_photo: zod.any().refine((file) => {
+            if (!file) return true;
+            const acceptedFormats = ['image/jpeg', 'image/png'];
+            return file.size <= 1048576 && acceptedFormats.includes(file.type);
+        }, { message: 'Foto ayah harus berupa file jpg, jpeg, atau png dan maksimal 1MB' }),
         mother: zod.string().min(1, { message: 'Nama ibu wajib diisi' }),
+        mother_photo: zod.any().refine((file) => {
+            if (!file) return true;
+            const acceptedFormats = ['image/jpeg', 'image/png'];
+            return file.size <= 1048576 && acceptedFormats.includes(file.type);
+        }, { message: 'Foto ibu harus berupa file jpg, jpeg, atau png dan maksimal 1MB' }),
         father_death_certificate_number: zod.string().optional(),
         mother_death_certificate_number: zod.string().optional(),
         phone_number: zod.string().min(1, { message: 'Nomor telepon wajib diisi' }).max(15, { message: 'Nomor telepon tidak boleh lebih dari 15 karakter' }),
@@ -57,8 +74,11 @@ const formValues = reactive({
     gender: '',
     last_education: '',
     school_grade: '',
+    photo: null as File | null,
     father: '',
+    father_photo: null as File | null,
     mother: '',
+    mother_photo: null as File | null,
     shirt_size: '',
     shoe_size: 0,
     father_death_certificate_number: '',
@@ -78,8 +98,11 @@ function resetForm() {
         gender: '',
         last_education: '',
         school_grade: '',
+        photo: null as File | null,
         father: '',
+        father_photo: null as File | null,
         mother: '',
+        mother_photo: null as File | null,
         shirt_size: '',
         shoe_size: 0,
         father_death_certificate_number: '',
@@ -115,13 +138,18 @@ function initializeForm(beneficiary: Beneficiary) {
 async function onSubmit(values: any) {
     isSubmitting.value = true;
     try {
-        // console.log(values);
-        Inertia.put(route('board_member.beneficiaries.update', props.beneficiary.nik), values, {
+        Inertia.post(route('board_member.beneficiaries.update', props.beneficiary.nik), values, {
+            onError: (errors) => {
+                console.error("Error dari backend:", errors);
+
+                if (errors.message) {
+                    toast.error(errors.message);
+                }
+            },
             onFinish: () => {
                 isSubmitting.value = false;
             },
         });
-        // isSubmitting.value = false;
     } catch (error) {
         isSubmitting.value = false;
     }
@@ -129,7 +157,14 @@ async function onSubmit(values: any) {
 
 onMounted(() => {
     initializeForm(props.beneficiary);
-    console.log(props.beneficiary);
+});
+
+const imagePreviewUrl = computed(() => {
+    return {
+        child: formValues.photo ? URL.createObjectURL(formValues.photo) : null,
+        father: formValues.father_photo ? URL.createObjectURL(formValues.father_photo) : null,
+        mother: formValues.mother_photo ? URL.createObjectURL(formValues.mother_photo) : null,
+    };
 });
 </script>
 
@@ -180,7 +215,9 @@ onMounted(() => {
                         </template>
 
                         <div>
-                            <Label for="nik">No NIK</Label>
+                            <Label for="nik">No NIK
+                                <span class="text-xs text-red-500">*wajib diisi</span>
+                            </Label>
                             <Field v-model="formValues.nik" name="nik" type="number" :rules="{ required: true }">
                                 <template v-slot="{ field }">
                                     <Input v-bind="field" type="number" placeholder="cth: 3307xxxxxxxx..." />
@@ -190,7 +227,9 @@ onMounted(() => {
                         </div>
 
                         <div>
-                            <Label for="name">Nama</Label>
+                            <Label for="name">Nama
+                                <span class="text-xs text-red-500">*wajib diisi</span>
+                            </Label>
                             <Field v-model="formValues.name" name="name" type="text" :rules="{ required: true }">
                                 <template v-slot="{ field }">
                                     <Input v-bind="field" placeholder="cth: Jasuki..." />
@@ -200,7 +239,9 @@ onMounted(() => {
                         </div>
 
                         <div>
-                            <Label for="gender">Jenis Kelamin</Label>
+                            <Label for="gender">Jenis Kelamin
+                                <span class="text-xs text-red-500">*wajib dipilih</span>
+                            </Label>
                             <Field v-model="formValues.gender" name="gender" type="select" :rules="{ required: true }">
                                 <template v-slot="{ field }">
                                     <Select v-bind="field" v-model="formValues.gender"
@@ -219,7 +260,9 @@ onMounted(() => {
                         </div>
 
                         <div>
-                            <Label for="place_of_birth">Tempat Lahir</Label>
+                            <Label for="place_of_birth">Tempat Lahir
+                                <span class="text-xs text-red-500">*wajib diisi</span>
+                            </Label>
                             <Field v-model="formValues.place_of_birth" name="place_of_birth" type="text"
                                 :rules="{ required: true }">
                                 <template v-slot="{ field }">
@@ -230,7 +273,9 @@ onMounted(() => {
                         </div>
 
                         <div>
-                            <Label for="date_of_birth">Tanggal Lahir</Label>
+                            <Label for="date_of_birth">Tanggal Lahir
+                                <span class="text-xs text-red-500">*wajib diisi</span>
+                            </Label>
                             <Field v-model="formValues.date_of_birth" name="date_of_birth" type="text"
                                 :rules="{ required: true }">
                                 <template v-slot="{ field }">
@@ -251,7 +296,9 @@ onMounted(() => {
                         </div>
 
                         <div>
-                            <Label for="last_education">Pendidikan Terakhir</Label>
+                            <Label for="last_education">Pendidikan Terakhir
+                                <span class="text-xs text-red-500">*wajib diisi</span>
+                            </Label>
                             <Field v-model="formValues.last_education" name="last_education" type="select">
                                 <template v-slot="{ field }">
                                     <Select v-bind="field" v-model="formValues.last_education"
@@ -271,7 +318,9 @@ onMounted(() => {
                         </div>
 
                         <div>
-                            <Label for="school_grade">Kelas</Label>
+                            <Label for="school_grade">Kelas
+                                <span class="text-xs text-red-500">*wajib diisi</span>
+                            </Label>
                             <Field v-model="formValues.school_grade" name="school_grade" type="text"
                                 :rules="{ required: true }">
                                 <template v-slot="{ field }">
@@ -303,7 +352,9 @@ onMounted(() => {
                         </div>
 
                         <div>
-                            <Label for="status">Status</Label>
+                            <Label for="status">Status
+                                <span class="text-xs text-red-500">*wajib diisi</span>
+                            </Label>
                             <Field v-model="formValues.status" name="status" type="select" :rules="{ required: true }">
                                 <template v-slot="{ field }">
                                     <Select v-bind="field" v-model="formValues.status"
@@ -321,13 +372,25 @@ onMounted(() => {
                             <ErrorMessage name="status" class="text-red-500 text-sm" />
                         </div>
 
+                        <div>
+                            <Label for="photo">Foto anak</Label>
+                            <Field v-model="formValues.photo" name="photo" type="file" :rules="{ required: false }">
+                                <template v-slot="{ field }">
+                                    <Input v-bind="field" type="file" class="dark:!text-white" />
+                                </template>
+                            </Field>
+                            <ErrorMessage class="text-red-500 text-sm" name="photo" />
+                        </div>
+
                         <div class="col-span-2 mt-3">
                             <p class="font-semibold tracking-tight text-lg">Data Orang Tua</p>
                             <Separator class="my-2 dark:bg-neutral-600" />
                         </div>
 
                         <div>
-                            <Label for="father">Nama Ayah</Label>
+                            <Label for="father">Nama Ayah
+                                <span class="text-xs text-red-500">*wajib diisi</span>
+                            </Label>
                             <Field v-model="formValues.father" name="father" type="text" :rules="{ required: true }">
                                 <template v-slot="{ field }">
                                     <Input v-bind="field" placeholder="cth: Supriyadi..." />
@@ -337,13 +400,37 @@ onMounted(() => {
                         </div>
 
                         <div>
-                            <Label for="mother">Nama Ibu</Label>
+                            <Label for="father_photo">Foto ayah</Label>
+                            <Field v-model="formValues.father_photo" name="father_photo" type="file"
+                                :rules="{ required: false }">
+                                <template v-slot="{ field }">
+                                    <Input v-bind="field" type="file" class="dark:!text-white" />
+                                </template>
+                            </Field>
+                            <ErrorMessage class="text-red-500 text-sm" name="father_photo" />
+                        </div>
+
+                        <div>
+                            <Label for="mother">Nama Ibu
+                                <span class="text-xs text-red-500">*wajib diisi</span>
+                            </Label>
                             <Field v-model="formValues.mother" name="mother" type="text" :rules="{ required: true }">
                                 <template v-slot="{ field }">
                                     <Input v-bind="field" placeholder="cth: Ngadinah..." />
                                 </template>
                             </Field>
                             <ErrorMessage name="mother" class="text-red-500 text-sm" />
+                        </div>
+
+                        <div>
+                            <Label for="mother_photo">Foto ibu</Label>
+                            <Field v-model="formValues.mother_photo" name="mother_photo" type="file"
+                                :rules="{ required: false }">
+                                <template v-slot="{ field }">
+                                    <Input v-bind="field" type="file" class="dark:!text-white" />
+                                </template>
+                            </Field>
+                            <ErrorMessage class="text-red-500 text-sm" name="mother_photo" />
                         </div>
 
                         <div>
@@ -589,6 +676,26 @@ onMounted(() => {
                                     Status</p>
                                 <p>{{ formValues.status || 'Status' }}</p>
                             </div>
+                            <div class="col-span-2">
+                                <p
+                                    class="font-semibold text-sm tracking-tight text-neutral-600 dark:text-neutral-400 mb-1">
+                                    Foto anak <span class="text-xs">(opsional)</span>
+                                </p>
+                                <div
+                                    v-if="formValues.photo && formValues.photo.type !== 'application/pdf' && imagePreviewUrl.child">
+                                    <img :src="imagePreviewUrl.child" alt="Bukti Transfer"
+                                        class="max-w-full max-h-36 h-auto rounded-lg" />
+                                </div>
+                                <div v-else>
+                                    <div v-if="beneficiary.photo">
+                                        <img :src="getImageUrl(`beneficiaries/${beneficiary.photo}`)"
+                                            alt="Bukti Transfer" class="max-w-full max-h-36 h-auto rounded-lg" />
+                                    </div>
+                                    <div v-else>
+                                        Belum unggah foto anak
+                                    </div>
+                                </div>
+                            </div>
                             <Separator class="col-span-2 my-2 dark:bg-neutral-600" />
                             <div>
                                 <p
@@ -625,6 +732,46 @@ onMounted(() => {
                                     class="font-semibold text-sm tracking-tight text-neutral-600 dark:text-neutral-400 -mb-1">
                                     Deskripsi</p>
                                 <p>{{ formValues.description || 'Deskripsi' }}</p>
+                            </div>
+                            <div>
+                                <p
+                                    class="font-semibold text-sm tracking-tight text-neutral-600 dark:text-neutral-400 mb-1">
+                                    Foto ayah <span class="text-xs">(opsional)</span>
+                                </p>
+                                <div
+                                    v-if="formValues.father_photo && formValues.father_photo.type !== 'application/pdf' && imagePreviewUrl.father">
+                                    <img :src="imagePreviewUrl.father" alt="Bukti Transfer"
+                                        class="max-w-full max-h-36 h-auto rounded-lg" />
+                                </div>
+                                <div v-else>
+                                    <div v-if="beneficiary.father_photo">
+                                        <img :src="getImageUrl(`beneficiaries/${beneficiary.father_photo}`)"
+                                            alt="Bukti Transfer" class="max-w-full max-h-36 h-auto rounded-lg" />
+                                    </div>
+                                    <div v-else>
+                                        Belum unggah foto ayah
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <p
+                                    class="font-semibold text-sm tracking-tight text-neutral-600 dark:text-neutral-400 mb-1">
+                                    Foto ibu <span class="text-xs">(opsional)</span>
+                                </p>
+                                <div
+                                    v-if="formValues.mother_photo && formValues.mother_photo.type !== 'application/pdf' && imagePreviewUrl.mother">
+                                    <img :src="imagePreviewUrl.mother" alt="Bukti Transfer"
+                                        class="max-w-full max-h-36 h-auto rounded-lg" />
+                                </div>
+                                <div v-else>
+                                    <div v-if="beneficiary.mother_photo">
+                                        <img :src="getImageUrl(`beneficiaries/${beneficiary.mother_photo}`)"
+                                            alt="Bukti Transfer" class="max-w-full max-h-36 h-auto rounded-lg" />
+                                    </div>
+                                    <div v-else>
+                                        Belum unggah foto ibu
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <p>Apabila anda sudah yakin anda dapat langsung menyimpan data</p>

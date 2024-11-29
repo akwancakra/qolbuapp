@@ -2,30 +2,14 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
-use App\Http\Controllers\Duta\BeneficiaryController as DutaBeneficiaryController;
-use App\Http\Controllers\Duta\TransactionController as DutaTransactionController;
-use App\Http\Controllers\Pengurus\BeneficiaryController as PengurusBeneficiaryController;
-use App\Http\Controllers\Pengurus\TransactionController as PengurusTransactionController;
 use App\Http\Controllers\BoardMember\BeneficiaryController as BoardMemberBeneficiaryController;
 use App\Http\Controllers\BoardMember\IncomeController as BoardMemberIncomeController;
 use App\Http\Controllers\Ambassador\BeneficiaryController as AmbassadorBeneficiaryController;
 use App\Http\Controllers\Ambassador\IncomeController as AmbassadorIncomeController;
+use App\Http\Controllers\MainController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
-
-// Route::get('/', function () {
-//     return Inertia::render('Welcome', [
-//         'canLogin' => Route::has('login'),
-//         'canRegister' => Route::has('register'),
-//         'laravelVersion' => Application::VERSION,
-//         'phpVersion' => PHP_VERSION,
-//     ]);
-// });
-
-// Route::get('/dashboard', function () {
-//     return Inertia::render('Dashboard');
-// })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::get('/', function () {
     if (!Auth::check()) {
@@ -37,19 +21,18 @@ Route::get('/', function () {
     switch ($user->role) {
         case 'admin':
             return redirect()->route('admin.dashboard');
-            // return Inertia::render('Admin/Dashboard', ['user' => $user]);
         case 'pengurus':
-            // return redirect()->route('board_member.dashboard');
             return redirect()->route('board_member.dashboard');
-            // return Inertia::render('Pengurus/Dashboard', ['user' => $user]);
         case 'duta':
-            // return redirect()->route('ambassador.dashboard');
             return redirect()->route('ambassador.dashboard');
-            // return Inertia::render('Duta/Dashboard', ['user' => $user]);
         default:
             return redirect()->route('login');
     }
 })->name('dashboard');
+
+// CREATE INCOME FOR USERS THAT NOT LOGGED IN
+Route::get('/incomes/create', [MainController::class, 'create'])->name('incomes.create');
+Route::post('/incomes/store', [MainController::class, 'store'])->name('incomes.store');
 
 Route::middleware(['auth', 'role:admin'])->prefix('ad')->group(function () {
     Route::get('/dashboard', function () {
@@ -69,47 +52,6 @@ Route::middleware(['auth', 'role:admin'])->prefix('ad')->group(function () {
     Route::post('/users/destroy-multiple', [AdminUserController::class, 'destroyMultiple'])->name('admin.users.destroy-multiple');
 });
 
-Route::middleware(['auth', 'role:pengurus'])->prefix('pe')->group(function () {
-    Route::get('/dashboard', function () {
-        $user = Auth::user();
-        return Inertia::render('Pengurus/Dashboard', ['user' => $user]);
-    })->name('pengurus.dashboard');
-
-    Route::resource('transactions', PengurusTransactionController::class)->names([
-        'index' => 'pengurus.transactions.index',
-        'create' => 'pengurus.transactions.create',
-        'store' => 'pengurus.transactions.store',
-        'show' => 'pengurus.transactions.show',
-        'edit' => 'pengurus.transactions.edit',
-        'update' => 'pengurus.transactions.update',
-        'destroy' => 'pengurus.transactions.destroy',
-    ]);
-
-    Route::resource('beneficiaries', PengurusBeneficiaryController::class)->names([
-        'index' => 'pengurus.beneficiaries.index',
-        'create' => 'pengurus.beneficiaries.create',
-        'store' => 'pengurus.beneficiaries.store',
-        'show' => 'pengurus.beneficiaries.show',
-        'edit' => 'pengurus.beneficiaries.edit',
-        'update' => 'pengurus.beneficiaries.update',
-        'destroy' => 'pengurus.beneficiaries.destroy',
-    ]);
-});
-
-Route::middleware(['auth', 'role:duta'])->prefix('du')->group(function () {
-    Route::get('/dashboard', function () {
-        $user = Auth::user();
-        return Inertia::render('Duta/Dashboard', ['user' => $user]);
-    })->name('duta.dashboard');
-
-    Route::get('transactions', [DutaTransactionController::class, 'index'])->name('duta.transactions.index');
-    Route::get('transactions/create', [DutaTransactionController::class, 'create'])->name('duta.transactions.create');
-    Route::post('transactions/store', [DutaTransactionController::class, 'store'])->name('duta.transactions.store');
-    Route::get('beneficiaries', [DutaBeneficiaryController::class, 'index'])->name('duta.beneficiaries.index');
-    Route::get('beneficiaries/{beneficiary}', [DutaBeneficiaryController::class, 'show'])->name('duta.beneficiaries.show');
-});
-
-// By Bill START
 Route::middleware(['auth', 'role:duta'])->prefix('am')->group(function () {
     Route::get('/dashboard', function () {
         $user = Auth::user();
@@ -138,30 +80,32 @@ Route::middleware(['auth', 'role:pengurus'])->prefix('bm')->group(function () {
         return Inertia::render('BoardMember/Dashboard', ['user' => $user]);
     })->name('board_member.dashboard');
 
-    Route::resource('beneficiaries', BoardMemberBeneficiaryController::class)->names([
-        'index' => 'board_member.beneficiaries.index',
-        'create' => 'board_member.beneficiaries.create',
-        'store' => 'board_member.beneficiaries.store',
-        'show' => 'board_member.beneficiaries.show',
-        'edit' => 'board_member.beneficiaries.edit',
-        'update' => 'board_member.beneficiaries.update',
-        'destroy' => 'board_member.beneficiaries.destroy',
-    ]);
+    Route::resource('beneficiaries', BoardMemberBeneficiaryController::class)
+        ->except('update')
+        ->names([
+            'index' => 'board_member.beneficiaries.index',
+            'create' => 'board_member.beneficiaries.create',
+            'store' => 'board_member.beneficiaries.store',
+            'show' => 'board_member.beneficiaries.show',
+            'edit' => 'board_member.beneficiaries.edit',
+            'destroy' => 'board_member.beneficiaries.destroy',
+        ]);
     Route::post('/beneficiaries/destroy-multiple', [BoardMemberBeneficiaryController::class, 'destroyMultiple'])->name('board_member.beneficiaries.destroy-multiple');
+    Route::post('/beneficiaries/{beneficiary}', [BoardMemberBeneficiaryController::class, 'update'])->name('board_member.beneficiaries.update');
 
     Route::resource('incomes', BoardMemberIncomeController::class)
-        ->except('show')
+        ->except('show', 'update')
         ->names([
             'index' => 'board_member.incomes.index',
             'create' => 'board_member.incomes.create',
             'store' => 'board_member.incomes.store',
             'edit' => 'board_member.incomes.edit',
-            'update' => 'board_member.incomes.update',
             'destroy' => 'board_member.incomes.destroy',
         ]);
+
     Route::post('/incomes/destroy-multiple', [BoardMemberIncomeController::class, 'destroyMultiple'])->name('board_member.incomes.destroy-multiple');
+    Route::post('/incomes/{income}', [BoardMemberIncomeController::class, 'update'])->name('board_member.incomes.update');
 });
-// By Bill END
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

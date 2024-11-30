@@ -118,6 +118,7 @@ const props = defineProps<{
         week: string;
         month: string;
         year: string;
+        chart_type: string;
         count_per_page: string;
     };
 }>();
@@ -155,6 +156,7 @@ const form = useForm({
     week: '',
     month: '',
     year: '',
+    chart_type: '',
     count_per_page: '10'
 });
 
@@ -167,6 +169,7 @@ onMounted(() => {
     form.week = props.filters.week;
     form.month = props.filters.month;
     form.year = props.filters.year;
+    form.chart_type = props.filters.chart_type;
     form.count_per_page = props.filters.count_per_page;
 
     const flashMessage = (page.props.flash as { message?: string })?.message;
@@ -183,6 +186,8 @@ watch(() => value.value, (newValue) => {
 }, { deep: true });
 
 watch(() => form.data(), (newData) => {
+    console.log(newData)
+
     form.get(route('board_member.incomes.index'), {
         preserveState: true,
         data: newData,
@@ -357,7 +362,7 @@ const secondaryTitlePage = computed(() => {
                         <PopoverTrigger as-child>
                             <Button variant="outline" role="combobox" :aria-expanded="openAmbassador"
                                 class="w-full justify-between">
-                                {{ form.name ? availableAmbassadors.find((ambassador) => ambassador.label ===
+                                {{ form.name ? props.availableAmbassadors.find((ambassador) => ambassador.label ===
                                     form.name)?.label || 'Semua'
                                     : 'Pilih Duta...' }}
                                 <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -553,36 +558,22 @@ const secondaryTitlePage = computed(() => {
                         </p>
                         <TopDonorTable :top-donors="topTenDonors" />
                     </div>
-                    <!-- <div class="col-span-2 my-3">
-                        <Tabs default-value="daily">
+                    <div class="col-span-2 my-3">
+                        <p class="text-sm font-semibold mb-1">Tipe Chart</p>
+                        <Tabs default-value="daily" v-model="form.chart_type" @update-value="form.chart_type = $event">
                             <TabsList>
                                 <TabsTrigger value="daily">
                                     Harian
                                 </TabsTrigger>
-                                <TabsTrigger value="weekly">
-                                    Bulanan
-                                </TabsTrigger>
                                 <TabsTrigger value="monthly">
-                                    Mingguan
+                                    Bulanan
                                 </TabsTrigger>
                                 <TabsTrigger value="yearly">
                                     Tahunan
                                 </TabsTrigger>
                             </TabsList>
-                            <TabsContent value="daily">
-                                Daily contect goes here
-                            </TabsContent>
-                            <TabsContent value="weekly">
-                                Weekly content goes here
-                            </TabsContent>
-                            <TabsContent value="monthly">
-                                Monthly content goes here
-                            </TabsContent>
-                            <TabsContent value="yearly">
-                                Yearly content goes here
-                            </TabsContent>
                         </Tabs>
-                    </div> -->
+                    </div>
                     <div>
                         <IncomeBarChart :chart-data="chartData" />
                     </div>
@@ -591,8 +582,6 @@ const secondaryTitlePage = computed(() => {
                     </div>
                 </div>
             </transition>
-
-            <!-- <Separator class="my-3" /> -->
         </section>
 
         <section class="bg-white p-3 rounded-lg dark:bg-neutral-800">
@@ -758,9 +747,11 @@ const secondaryTitlePage = computed(() => {
                             class="odd:bg-neutral-100 even:bg-white dark:even:bg-neutral-700 dark:odd:bg-neutral-800">
                             <TableCell class="p-3">
                                 <Checkbox :id="`income-${income.id}`" :checked="selectedIncomes.includes(income.id)"
-                                    @update:checked="(checked) => toggleCheckbox(checked, income.id)" />
+                                    @update:checked="(checked: boolean) => toggleCheckbox(checked, income.id)" />
                             </TableCell>
-                            <TableCell>{{ index + 1 }}</TableCell>
+                            <TableCell>
+                                {{ (incomes.current_page - 1) * incomes.per_page + index + 1 }}
+                            </TableCell>
                             <TableCell>
                                 <TooltipProvider>
                                     <Tooltip>
@@ -959,7 +950,6 @@ const secondaryTitlePage = computed(() => {
                     </TableBody>
                 </Table>
 
-                <!-- <pre>{{ incomes }}</pre> -->
                 <PaginationComponent :pagination="props.incomes" @page-change="handlePageChange" />
             </div>
         </section>

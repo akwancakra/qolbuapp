@@ -342,9 +342,11 @@ const handlePageChange = (newPage: number) => {
                             <TableCell class="p-3">
                                 <Checkbox :id="`transaction-${beneficiary.nik}`"
                                     :checked="selectedBeneficiaries.includes(beneficiary.nik)"
-                                    @update:checked="(checked) => toggleCheckbox(checked, beneficiary.nik)" />
+                                    @update:checked="(checked: boolean) => toggleCheckbox(checked, beneficiary.nik)" />
                             </TableCell>
-                            <TableCell>{{ index + 1 }}</TableCell>
+                            <TableCell>
+                                {{ (beneficiaries.current_page - 1) * beneficiaries.per_page + index + 1 }}
+                            </TableCell>
                             <TableCell>{{ beneficiary.nik }}</TableCell>
                             <TableCell>
                                 <Link :href="route('ambassador.beneficiaries.show', beneficiary.nik)"

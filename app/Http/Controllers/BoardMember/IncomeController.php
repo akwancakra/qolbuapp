@@ -8,143 +8,97 @@ use App\Models\Income;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
+use InvalidArgumentException;
 
 class IncomeController extends Controller
 {
-    private function getIncomeChartData($incomesQuery, $time, $week, $month, $year, $startRange, $endRange)
+    private const DATE_FORMATS = [
+        'daily' => 'd M y',
+        'monthly' => 'M Y',
+        'yearly' => 'Y',
+    ];
+
+    /**
+     * Format data chart menjadi array dengan label dan nilai.
+     *
+     * @param \Illuminate\Support\Collection $data
+     * @param string $dateFormat
+     * @return \Illuminate\Support\Collection
+     */
+    private function formatChartData($data, $dateFormat)
     {
-        $chartData = [];
-        $data = [];
-        if ($time === 'weekly' && $week) {
-            $start = Carbon::parse($week);
-            $end = $start->copy()->addDays(6);
+        return $data->map(function ($item) use ($dateFormat) {
+            $label = isset($item->date)
+                ? Carbon::parse($item->date)->translatedFormat($dateFormat)
+                : (isset($item->month) && isset($item->year)
+                    ? Carbon::create($item->year, $item->month, 1)->translatedFormat($dateFormat)
+                    : ($item->year ?? ''));
 
-            // Ambil data pendapatan per hari
-            $data = (clone $incomesQuery)
-                ->selectRaw('DATE(transfer_date) as date, SUM(amount) as total_amount')
-                ->whereBetween('transfer_date', [$start, $end])
-                ->groupBy('date')
-                ->orderBy('date')
-                ->get();
+            return [
+                'label' => $label,
+                'value' => (int) $item->total_amount,
+            ];
+        });
+    }
 
-            // Format hasil ke chart data
-            $chartData = $data->map(function ($item) {
-                $label = Carbon::parse($item->date)->translatedFormat('d D');
-                return [
-                    'label' => $label,
-                    'value' => (int) $item->total_amount,
-                ];
-            });
-        } elseif ($time === 'yearly' && $year) {
-            // Ambil data pendapatan per bulan
-            $data = (clone $incomesQuery)
-                ->selectRaw('MONTH(transfer_date) as month, SUM(amount) as total_amount')
-                ->whereYear('transfer_date', $year)
-                ->groupBy('month')
-                ->orderBy('month')
-                ->get();
+    /**
+     * Ambil data visualisasi chart berdasarkan field group dan select.
+     *
+     * @param \Illuminate\Database\Query\Builder $query
+     * @param array $groupByFields
+     * @param array|null $fields
+     * @return \Illuminate\Support\Collection
+     */
+    private function getVisualizationChartData($query, $groupByFields, $fields = null)
+    {
+        $query = $query->selectRaw(implode(', ', $groupByFields) . ', SUM(amount) as total_amount');
 
-            // Format hasil ke chart data
-            $chartData = $data->map(function ($item) {
-                $label = Carbon::create(null, $item->month)->translatedFormat('M');
-                return [
-                    'label' => $label,
-                    'value' => (int) $item->total_amount,
-                ];
-            });
-        } elseif ($time === 'default' || $time === 'monthly' || $time === 'custom') {
-            if ($time === 'default') {
-                // Ambil data pendapatan per bulan
-                $data = (clone $incomesQuery)
-                    ->selectRaw('DATE_FORMAT(transfer_date, "%b %y") as period, SUM(amount) as total_amount')
-                    ->groupBy('period')
-                    ->orderByRaw('MIN(transfer_date)')
-                    ->get();
-
-                // format hasil
-                $chartData = $data->map(function ($item) {
-                    return [
-                        'label' => $item->period,
-                        'value' => (int) $item->total_amount,
-                    ];
-                });
-            } elseif ($time === 'monthly' && $month && $year) {
-                // Ambil data pendapatan per hari dalam bulan tersebut
-                $data = (clone $incomesQuery)
-                    ->selectRaw('DATE(transfer_date) as date, SUM(amount) as total_amount')
-                    ->whereMonth('transfer_date', $month)
-                    ->whereYear('transfer_date', $year)
-                    ->groupBy('date')
-                    ->orderBy('date')
-                    ->get();
-
-                // format hasil
-                $chartData = $data->map(function ($item) {
-                    return [
-                        'label' => Carbon::parse($item->date)->translatedFormat('d M'),
-                        'value' => (int) $item->total_amount,
-                    ];
-                });
-            } elseif ($time === 'custom' && $startRange && $endRange) {
-                $start = Carbon::parse($startRange);
-                $end = Carbon::parse($endRange);
-
-                if ($start->diffInDays($end) <= 31) {
-                    // Ambil data pendapatan per hari
-                    $data = (clone $incomesQuery)
-                        ->selectRaw('DATE(transfer_date) as date, SUM(amount) as total_amount')
-                        ->whereBetween('transfer_date', [$start, $end])
-                        ->groupBy('date')
-                        ->orderBy('date')
-                        ->get();
-
-                    // Format hasil
-                    $chartData = $data->map(function ($item) {
-                        return [
-                            'label' => Carbon::parse($item->date)->translatedFormat('d M'),
-                            'value' => (int) $item->total_amount,
-                        ];
-                    });
-                } else if ($start->diffInDays($end) >= 730) {
-                    // Ambil data pendapatan per tahun
-                    $data = (clone $incomesQuery)
-                        ->selectRaw('YEAR(transfer_date) as year, SUM(amount) as total_amount')
-                        ->whereBetween('transfer_date', [$start, $end])
-                        ->groupBy('year')
-                        ->orderBy('year')
-                        ->get();
-
-                    // Format hasil
-                    $chartData = $data->map(function ($item) {
-                        return [
-                            'label' => $item->year,
-                            'value' => (int) $item->total_amount,
-                        ];
-                    });
-                } else {
-                    // Ambil data pendapatan per bulan
-                    $data = (clone $incomesQuery)
-                        ->selectRaw('DATE_FORMAT(transfer_date, "%b %y") as period, SUM(amount) as total_amount')
-                        ->whereBetween('transfer_date', [$start, $end])
-                        ->groupBy('period')
-                        ->orderByRaw('MIN(transfer_date)')
-                        ->get();
-
-                    // Format hasil
-                    $chartData = $data->map(function ($item) {
-                        return [
-                            'label' => $item->period,
-                            'value' => (int) $item->total_amount,
-                        ];
-                    });
-                }
-            }
+        if ($fields) {
+            $query->groupBy($fields)->orderByRaw(implode(', ', $fields));
         }
 
-        return $chartData;
+        return $query->get();
+    }
+
+    /**
+     * Dapatkan data chart pendapatan berdasarkan tipe chart.
+     *
+     * @param \Illuminate\Database\Query\Builder $query
+     * @param string $chartType
+     * @return \Illuminate\Support\Collection
+     */
+    public function getIncomeChartData($query, $chartType)
+    {
+        $groupByFields = [];
+        $fields = [];
+        $dateFormat = self::DATE_FORMATS[$chartType] ?? '';
+
+        switch ($chartType) {
+            case 'daily':
+                $groupByFields = ['DATE(transfer_date) as date'];
+                $fields = ['date'];
+                break;
+
+            case 'monthly':
+                $groupByFields = ['YEAR(transfer_date) as year', 'MONTH(transfer_date) as month'];
+                $fields = ['year', 'month'];
+                break;
+
+            case 'yearly':
+                $groupByFields = ['YEAR(transfer_date) as year'];
+                $fields = ['year'];
+                break;
+
+            default:
+                throw new InvalidArgumentException("Unsupported chart type: $chartType");
+        }
+
+        $incomeData = $this->getVisualizationChartData($query, $groupByFields, $fields);
+        return $this->formatChartData($incomeData, $dateFormat);
     }
 
     /**
@@ -163,6 +117,7 @@ class IncomeController extends Controller
         $week = $request->input('week');
         $month = $request->input('month');
         $year = $request->input('year');
+        $chart_type = $request->input('chart_type') ?? 'daily';
         $countPerPage = $request->input('count_per_page');
 
         if ($teamCode === 'default') {
@@ -234,7 +189,7 @@ class IncomeController extends Controller
 
         // GET INCOME BY FILTERING
         $countPerPage = (int)($request->count_per_page ?? 10);
-        $newIncomesQuery = $incomesQuery
+        $newIncomesQuery = (clone $incomesQuery)
             ->when($time === 'custom' && $startRange && $endRange, function ($query) use ($startRange, $endRange) {
                 return $query->whereBetween('transfer_date', [$startRange, $endRange]);
             })
@@ -274,7 +229,7 @@ class IncomeController extends Controller
             ->take(10)
             ->get();
 
-        $chartData = $this->getIncomeChartData(clone $newIncomesQuery, $time ?? 'default', $week, $month, $year, $startRange, $endRange);
+        $chartData = $this->getIncomeChartData(clone $newIncomesQuery, $chart_type);
 
         // Proses pengelompokan minggu
         $incomeDates = Income::selectRaw('MIN(transfer_date) as start_date, MAX(transfer_date) as end_date')->first();

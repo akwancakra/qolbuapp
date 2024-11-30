@@ -26,26 +26,39 @@ const processedLinks = computed(() => {
     const siblingCount = isMobile.value ? 1 : 2;
     const range = [];
 
+
     // Mobile: tampilkan max 3 halaman di tengah
     if (isMobile.value) {
-        // Tambahkan tombol awal jika diperlukan
-        if (currentPage > 2) {
-            // range.push({ type: "page", value: 1 });
+        // Selalu tambahkan halaman pertama jika total halaman > 1
+        if (totalPages > 1) {
+            range.push({ type: "page", value: 1 });
+        }
+
+        // Tambahkan ellipsis jika halaman awal tidak dekat dengan current page
+        if (currentPage > 3) {
             range.push({ type: "ellipsis" });
         }
 
-        // Tambahkan halaman di tengah
+        // Tambahkan halaman di sekitar current page
         const startPage = Math.max(2, currentPage - siblingCount);
-        const endPage = Math.min(totalPages - 1, currentPage + siblingCount);
+        const endPage = Math.min(totalPages, currentPage + siblingCount);
 
         for (let i = startPage; i <= endPage; i++) {
-            range.push({ type: "page", value: i });
+            // Hindari menambahkan halaman 1 lagi
+            if (i !== 1) {
+                range.push({ type: "page", value: i });
+            }
         }
 
-        // Tambahkan tombol akhir jika diperlukan
+        // Tambahkan ellipsis dan halaman terakhir jika diperlukan
         if (currentPage < totalPages - 1) {
-            range.push({ type: "ellipsis" });
-            // range.push({ type: "page", value: totalPages });
+            if (currentPage < totalPages - 2) {
+                range.push({ type: "ellipsis" });
+            }
+            // Tambahkan halaman terakhir hanya jika belum ada
+            if (range[range.length - 1].value !== totalPages) {
+                range.push({ type: "page", value: totalPages });
+            }
         }
     } else {
         // Desktop: tampilkan lebih banyak halaman
@@ -103,7 +116,7 @@ const goToPage = (page: number) => {
                     </Button>
                 </template>
                 <template v-else>
-                    <Button variant="outline" size="icon" class="cursor-default">
+                    <Button variant="outline" size="icon" class="cursor-default w-fit px-0.5">
                         ...
                     </Button>
                 </template>

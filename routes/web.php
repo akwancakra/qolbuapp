@@ -72,6 +72,8 @@ Route::middleware(['auth', 'role:duta'])->prefix('am')->group(function () {
             'create' => 'ambassador.incomes.create',
             'store' => 'ambassador.incomes.store',
         ]);
+
+    Route::get('/incomes/export', [AmbassadorIncomeController::class, 'export'])->name('ambassador.incomes.export');
 });
 
 Route::middleware(['auth', 'role:pengurus'])->prefix('bm')->group(function () {
@@ -105,6 +107,8 @@ Route::middleware(['auth', 'role:pengurus'])->prefix('bm')->group(function () {
 
     Route::post('/incomes/destroy-multiple', [BoardMemberIncomeController::class, 'destroyMultiple'])->name('board_member.incomes.destroy-multiple');
     Route::post('/incomes/{income}', [BoardMemberIncomeController::class, 'update'])->name('board_member.incomes.update');
+
+    Route::get('/incomes/export', [BoardMemberIncomeController::class, 'export'])->name('board_member.incomes.export');
 });
 
 Route::middleware('auth')->group(function () {

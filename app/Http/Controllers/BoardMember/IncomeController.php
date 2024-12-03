@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\BoardMember;
 
+use App\Exports\IncomeExport;
 use App\Http\Controllers\Controller;
 use App\Models\Ambassador;
 use App\Models\Income;
@@ -9,10 +10,13 @@ use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Response as FacadesResponse;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 use InvalidArgumentException;
+use Maatwebsite\Excel\Facades\Excel;
+use Spatie\Browsershot\Browsershot;
 
 class IncomeController extends Controller
 {
@@ -456,5 +460,106 @@ class IncomeController extends Controller
         }
 
         return to_route('board_member.incomes.index')->with('message', 'Berhasil menghapus beberapa data pendapatan');
+    }
+
+    public function export(Request $request)
+    {
+        $type = $request->input('type') ?? 'pdf';
+
+        $filters = [
+            'name' => $request->input('name') ?? 'default',
+            'team_code' => $request->input('team_code') ?? 'default',
+            'time' => $request->input('time') ?? 'default',
+            'start_range' => $request->input('start_range'),
+            'end_range' => $request->input('end_range'),
+            'week' => $request->input('week'),
+            'month' => $request->input('month'),
+            'year' => $request->input('year'),
+            'count_per_page' => (int) ($request->input('count_per_page') ?? 10),
+        ];
+        
+        if ($filters['team_code'] === 'default') {
+            $filters['team_code'] = null;
+        }
+
+        if ($filters['time'] === 'default') {
+            $filters['time'] = 
+            $filters['start_range'] =
+            $filters['end_range'] = 
+            $filters['week'] = 
+            $filters['month'] = 
+            $filters['year'] = null;
+        }
+
+        if ($filters['name'] === 'default') {
+            $filters['name'] = null;
+        } else {
+            $filters['name'] = substr($filters['name'], strpos($filters['name'], ' ') + 1);
+        }
+
+        // CREATE BASE CODE FOR QUERY
+        $incomesQuery = Income::with('ambassador')
+            ->when($filters['name'], function ($query, $name) {
+                return $query->whereHas('ambassador', function ($query) use ($name) {
+                    $query->where('name', 'LIKE', '%' . $name . '%');
+                });
+            })
+            ->when($filters['team_code'], function ($query, $teamCode) {
+                return $query->whereHas('ambassador', function ($query) use ($teamCode) {
+                    $query->where('code', 'LIKE', $teamCode . '%');
+                });
+            });
+
+        // GET INCOME BY FILTERING
+        $newIncomesQuery = (clone $incomesQuery)
+            ->when($filters['time'] === 'custom' && $filters['start_range'] && $filters['end_range'], function ($query) use ($filters) {
+                return $query->whereBetween('transfer_date', [$filters['start_range'], $filters['end_range']]);
+            })
+            ->when($filters['time'] === 'weekly' && $filters['week'], function ($query) use ($filters) {
+                $start = Carbon::parse($filters['week']);
+                $end = $start->copy()->addDays(6);
+                return $query->whereBetween('transfer_date', [$start, $end]);
+            })
+            ->when($filters['time'] === 'monthly' && $filters['month'] && $filters['year'], function ($query) use ($filters) {
+                return $query->whereMonth('transfer_date', $filters['month'])->whereYear('transfer_date', $filters['year']);
+            })
+            ->when($filters['time'] === 'yearly' && $filters['year'], function ($query) use ($filters) {
+                return $query->whereYear('transfer_date', $filters['year']);
+            });
+
+        // GET INCOME WITH PAGINATE
+        $incomes = (clone $newIncomesQuery)
+            ->orderByDesc('created_at')
+            ->paginate($filters['count_per_page']);
+        
+        // SETTING UP TEMPLATE FOR REPORT
+        $template = view('exports.incomes', ['incomes' => $incomes])->render();
+
+        // EXPORT REPORT BASED ON TYPE
+        $filename = Carbon::now();
+        
+        if ($type === 'pdf') {
+            $pdfData = Browsershot::html($template)
+                ->setPaper('a4')
+                ->pdf();
+
+            return FacadesResponse::make($pdfData, 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '.' . $type . '"',
+            ]);
+        } else if ($type === 'jpeg') {
+            $jpegData = Browsershot::html($template)
+                ->setScreenshotType('jpeg')
+                ->screenshot();
+
+            return FacadesResponse::make($jpegData, 200, [
+                'Content-Type' => 'image/jpeg',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '.' . $type . '"',
+            ]);
+        } else if ($type === 'xlsx') {
+            return Excel::download(new IncomeExport($incomes), $filename . '.' . $type);
+        }
+
+        return response()->json(['error' => 'Invalid type'], 400);
     }
 }

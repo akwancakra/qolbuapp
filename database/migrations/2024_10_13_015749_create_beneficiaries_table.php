@@ -36,7 +36,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        DB::statement("ALTER TABLE `users` AUTO_INCREMENT = 1000000000000000;");
+        DB::statement("ALTER TABLE `beneficiaries` AUTO_INCREMENT = 1000000000000000;");
     }
 
     /**

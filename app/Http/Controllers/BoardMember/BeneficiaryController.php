@@ -49,7 +49,7 @@ class BeneficiaryController extends Controller
         $beneficiaries = Beneficiary::query()
             ->search($request->name)
             ->age($request->min_age, $request->max_age)
-            ->educationLevel($request->education)
+            ->lastEducation($request->education)
             ->schoolGrade($request->school_grade)
             ->gender($request->gender)
             ->status($request->status)

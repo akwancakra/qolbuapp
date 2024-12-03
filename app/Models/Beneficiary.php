@@ -60,7 +60,7 @@ class Beneficiary extends Model
         }
     }
 
-    public function scopeEducationLevel($query, $last_education)
+    public function scopeLastEducation($query, $last_education)
     {
         if ($last_education && $last_education !== 'default') {
             return $query->where('last_education', $last_education);

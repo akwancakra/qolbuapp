@@ -5,7 +5,10 @@ export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
-export const formatCurrency = (value: number) => {
+export const formatCurrency = (value: number | string) => {
+    if (typeof value === "string") {
+        value = parseFloat(value.replace(/\D/g, ""));
+    }
     return new Intl.NumberFormat("id-ID", {
         style: "currency",
         currency: "IDR",

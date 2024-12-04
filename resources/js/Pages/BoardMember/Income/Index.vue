@@ -808,16 +808,16 @@ const secondaryTitlePage = computed(() => {
                             <TableCell>{{ income.type }}</TableCell>
                             <TableCell>{{
                                 formatNumber(income.amount)
-                                }}</TableCell>
+                            }}</TableCell>
                             <TableCell>{{
                                 formatNumber(income.amount * 0.2)
-                                }}</TableCell>
+                            }}</TableCell>
                             <TableCell>{{
                                 formatNumber(income.amount - (income.amount * 0.2))
-                                }}</TableCell>
+                            }}</TableCell>
                             <TableCell>{{
                                 formatNumber((income.amount - (income.amount * 0.2)) * 0.5)
-                                }}</TableCell>
+                            }}</TableCell>
                             <TableCell>{{
                                 formatNumber((income.amount - (income.amount * 0.2)) - ((income.amount
                                     - (income.amount * 0.2)) * 0.5))

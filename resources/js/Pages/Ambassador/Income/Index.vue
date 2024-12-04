@@ -57,11 +57,9 @@ import {
     FilePlusIcon,
     ChevronsUpDown,
     Check,
-    Loader2,
     ReceiptTextIcon,
     DatabaseIcon,
 } from "lucide-vue-next";
-import { BarChart } from "@/Components/ui/chart-bar";
 import { Checkbox } from "@/Components/ui/checkbox";
 // LOCAL COMPONENTS
 import { Ambassador, PaginatedIncomes } from "@/types";
@@ -75,7 +73,6 @@ import {
 import { DateRange } from "radix-vue";
 import { Popover, PopoverContent, PopoverTrigger } from "@/Components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/Components/ui/command";
-import { Inertia } from "@inertiajs/inertia";
 import { toast } from "vue-sonner";
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogScrollContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Separator } from "@/Components/ui/separator";
@@ -157,7 +154,7 @@ const form = useForm({
     week: '',
     month: '',
     year: '',
-    chart_type: 'daily',
+    chart_type: '',
     count_per_page: '10'
 });
 

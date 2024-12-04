@@ -36,7 +36,7 @@ const props = defineProps<{
             <Link :href="route('board_member.incomes.index')"
                 class="bg-white border border-neutral-300 rounded-lg p-3 hover:border-green-500 dark:bg-neutral-800 dark:border-neutral-600 dark:hover:border-green-600">
             <ReceiptTextIcon :size="32" class="mb-3" />
-            <p class="font-semibold tracking-tight text-lg sm:text-xl">Daftar Transferan</p>
+            <p class="font-semibold tracking-tight text-lg sm:text-xl">Daftar Pendapatan</p>
             </Link>
             <Link :href="route('board_member.beneficiaries.index')"
                 class="bg-white border border-neutral-300 rounded-lg p-3 hover:border-green-500 dark:bg-neutral-800 dark:border-neutral-600 dark:hover:border-green-600">

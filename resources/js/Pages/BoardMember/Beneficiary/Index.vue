@@ -58,6 +58,7 @@ import FilterBeneficiary from './_components/FilterBeneficiary.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/Components/ui/alert';
 import { Inertia } from '@inertiajs/inertia';
 import { toast } from 'vue-sonner';
+import Loading from '@/Components/Loading.vue';
 
 const page = usePage();
 const props = defineProps<{
@@ -149,6 +150,7 @@ onMounted(() => {
 // ========== DATA TABLE SECTION ==========
 // ========================================
 const dropdownOpen = ref(false);
+const isExporting = ref(false);
 // State untuk melacak checkbox yang dipilih
 const selectedBeneficiaries = ref<number[]>([]);
 const clientLocale = ref(navigator.language || 'en-US');
@@ -213,14 +215,45 @@ const deleteSelectedBeneficiaries = () => {
 };
 
 // Function untuk export beneficiaries
-const exportTransactions = () => {
-    const beneficiariesToExport = selectedBeneficiaries.value.length > 0
-        ? selectedBeneficiaries.value
-        : props.beneficiaries.data.map(beneficiary => beneficiary.nik);
-    // : props.transactions.data.map(transaction => transaction.id);
+const exportBeneficiaries = async (exportType: string) => {
+    isExporting.value = true;
+    try {
+        // Gunakan fetch untuk mendapatkan file
+        const response = await fetch(`/api/beneficiaries/export`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                niks: JSON.stringify(selectedBeneficiaries.value),
+                type: exportType,
+                filters: props.filters,
+                t: new Date().getTime().toString(),
+            })
+        });
 
-    console.log("Exporting beneficiaries with ids: ", beneficiariesToExport);
-    selectedBeneficiaries.value = [];
+        if (!response.ok) {
+            throw new Error(`Failed to fetch: ${response.statusText}`);
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `beneficiary_export.${exportType}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        console.log(`Export successful as ${exportType}`);
+        selectedBeneficiaries.value = [];
+        isExporting.value = false;
+    } catch (error) {
+        isExporting.value = false;
+        console.error("Failed to export beneficiaries:", error);
+        toast.error("Failed to export beneficiaries");
+    }
 };
 
 // CODE FOR PAGINATION
@@ -240,6 +273,10 @@ const handlePageChange = (newPage: number) => {
     <DashboardLayout>
         <template #header>
             <h1 class="text-xl font-semibold tracking-tight">Penerima Manfaat</h1>
+        </template>
+
+        <template v-if="isExporting">
+            <Loading message="Mengunduh data..." />
         </template>
 
         <section class="bg-white p-3 rounded-lg mb-3 dark:bg-neutral-800">
@@ -348,13 +385,16 @@ const handlePageChange = (newPage: number) => {
                                     </DropdownMenuSubTrigger>
                                     <DropdownMenuPortal>
                                         <DropdownMenuSubContent>
-                                            <DropdownMenuItem class="cursor-pointer gap-1" @click="exportTransactions">
+                                            <DropdownMenuItem class="cursor-pointer gap-1"
+                                                @click="exportBeneficiaries('pdf');">
                                                 <FileTextIcon :size="18" /> Export PDF
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem class="cursor-pointer gap-1" @click="exportTransactions">
+                                            <DropdownMenuItem class="cursor-pointer gap-1"
+                                                @click="exportBeneficiaries('xlsx');">
                                                 <SheetIcon :size="18" /> Export Excel
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem class="cursor-pointer gap-1" @click="exportTransactions">
+                                            <DropdownMenuItem class="cursor-pointer gap-1"
+                                                @click="exportBeneficiaries('jpeg');">
                                                 <ImageIcon :size="18" />Export JPG
                                             </DropdownMenuItem>
                                         </DropdownMenuSubContent>

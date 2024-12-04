@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3'
 import DashboardLayout from '@/Layouts/DashboardLayout.vue'
-import { CornerUpLeftIcon } from 'lucide-vue-next';
+import { CornerUpLeftIcon, FileText, Loader2 } from 'lucide-vue-next';
 import { Separator } from '@/Components/ui/separator';
 import { Button } from '@/Components/ui/button';
 import { AspectRatio } from '@/Components/ui/aspect-ratio';
@@ -9,12 +9,44 @@ import { Beneficiary } from '@/types';
 import { ref } from 'vue';
 import { useDateFormat } from '@vueuse/core';
 import { getImageUrl, getUserDefaultImage } from '@/lib/utils';
+import Loading from '@/Components/Loading.vue';
+import { toast } from 'vue-sonner';
 
-defineProps<{
+const props = defineProps<{
     beneficiary: Beneficiary
 }>();
 
 const clientLocale = ref(navigator.language || 'en-US');
+const isExporting = ref(false);
+
+const exportBeneficiary = async () => {
+    isExporting.value = true;
+    try {
+        // Use fetch to get the file
+        const response = await fetch(`/api/beneficiaries/export/${props.beneficiary.nik}`);
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch: ${response.statusText}`);
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `beneficiary_export.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        console.log(`Export successful as pdf`);
+        isExporting.value = false;
+    } catch (error) {
+        isExporting.value = false;
+        console.error("Failed to export beneficiary:", error);
+        toast.error("Failed to export beneficiary");
+    }
+};
 </script>
 
 <template>
@@ -28,6 +60,10 @@ const clientLocale = ref(navigator.language || 'en-US');
             <h1 class="text-xl font-semibold tracking-tight">Detail Penerima Manfaat</h1>
         </template>
 
+        <template v-if="isExporting">
+            <Loading message="Mengunduh data..." />
+        </template>
+
         <Button class="mb-3" variant="outline">
             <Link :href="route('ambassador.beneficiaries.index')" class="flex gap-1">
             <CornerUpLeftIcon :size="18" /> Kembali
@@ -37,6 +73,16 @@ const clientLocale = ref(navigator.language || 'en-US');
         <section class="bg-white p-3 rounded-lg mb-3 dark:bg-neutral-800">
             <div class="flex justify-between">
                 <p class="font-semibold text-2xl tracking-tight">{{ beneficiary.name }}</p>
+                <Buton variant="outline" @click="exportBeneficiary">
+                    <template v-if="!isExporting">
+                        <FileText class="w-4 h-4 mr-2" />
+                        <span>Ekspor Data</span>
+                    </template>
+                    <template v-else>
+                        <Loader2 class="w-4 h-4 mr-2 animate-spin" />
+                        <span>Mengeksport...</span>
+                    </template>
+                </Buton>
             </div>
 
             <Separator class="my-3 dark:bg-neutral-600" />

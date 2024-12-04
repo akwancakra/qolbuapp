@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3'
 import DashboardLayout from '@/Layouts/DashboardLayout.vue'
-import { CornerUpLeftIcon, EllipsisIcon, PencilIcon, Trash2Icon } from 'lucide-vue-next';
+import { CornerUpLeftIcon, EllipsisIcon, FileText, Loader2, PencilIcon, Trash2Icon } from 'lucide-vue-next';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/Components/ui/dropdown-menu';
 import { Separator } from '@/Components/ui/separator';
 import { Button } from '@/Components/ui/button';
@@ -13,15 +13,17 @@ import { useDateFormat } from '@vueuse/core';
 import { Inertia } from '@inertiajs/inertia';
 import { toast } from 'vue-sonner';
 import { getImageUrl, getUserDefaultImage } from '@/lib/utils';
+import Loading from '@/Components/Loading.vue';
 
-defineProps<{
+const props = defineProps<{
     beneficiary: Beneficiary
 }>();
 
 const clientLocale = ref(navigator.language || 'en-US');
+const isExporting = ref(false);
 
-const deleteBeneficiary = (nik: string) => {
-    Inertia.delete(route('board_member.beneficiaries.destroy', nik), {
+const deleteBeneficiary = () => {
+    Inertia.delete(route('board_member.beneficiaries.destroy', props.beneficiary.nik), {
         onSuccess: () => {
             toast.success("Berhasil menghapus data penerima manfaat");
         },
@@ -31,6 +33,36 @@ const deleteBeneficiary = (nik: string) => {
         },
     });
 };
+
+const exportBeneficiary = async () => {
+    isExporting.value = true;
+    try {
+        // Use fetch to get the file
+        const response = await fetch(`/api/beneficiaries/export/${props.beneficiary.nik}`);
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch: ${response.statusText}`);
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `beneficiary_export.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        console.log(`Export successful as pdf`);
+        isExporting.value = false;
+    } catch (error) {
+        isExporting.value = false;
+        console.error("Failed to export beneficiary:", error);
+        toast.error("Failed to export beneficiary");
+    }
+};
+
 </script>
 
 <template>
@@ -42,6 +74,10 @@ const deleteBeneficiary = (nik: string) => {
     <DashboardLayout>
         <template #header>
             <h1 class="text-xl font-semibold tracking-tight">Detail Penerima Manfaat</h1>
+        </template>
+
+        <template v-if="isExporting">
+            <Loading message="Mengunduh data..." />
         </template>
 
         <Button class="mb-3" variant="outline">
@@ -64,6 +100,16 @@ const deleteBeneficiary = (nik: string) => {
                         <DropdownMenuLabel>Aksi menu</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuGroup>
+                            <DropdownMenuItem @click="exportBeneficiary" class="cursor-pointer">
+                                <template v-if="!isExporting">
+                                    <FileText class="w-4 h-4 mr-2" />
+                                    <span>Ekspor Data</span>
+                                </template>
+                                <template v-else>
+                                    <Loader2 class="w-4 h-4 mr-2 animate-spin" />
+                                    <span>Mengunduh...</span>
+                                </template>
+                            </DropdownMenuItem>
                             <DropdownMenuItem as-child>
                                 <Link :href="route('board_member.beneficiaries.edit', beneficiary.nik)"
                                     class="cursor-pointer flex gap-1">
@@ -91,7 +137,7 @@ const deleteBeneficiary = (nik: string) => {
                                             <AlertDialogAction as-child>
                                                 <Button variant="destructive"
                                                     class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                                    @click="deleteBeneficiary(beneficiary.nik)">Ya,
+                                                    @click="deleteBeneficiary">Ya,
                                                     Hapus</Button>
                                             </AlertDialogAction>
                                         </AlertDialogFooter>

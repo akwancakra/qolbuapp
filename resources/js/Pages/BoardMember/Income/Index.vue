@@ -84,6 +84,8 @@ import TopDonorTable from "../Beneficiary/_components/TopDonorTable.vue";
 import IncomeBarChart from "../Beneficiary/_components/IncomeBarChart.vue";
 import IncomeLineChart from "../Beneficiary/_components/IncomeLineChart.vue";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/Components/ui/tabs";
+import axios from "axios";
+import Loading from "@/Components/Loading.vue";
 
 // CREATIN INTERFACES FOR DATA
 interface TopAmbassador {
@@ -198,6 +200,7 @@ watch(() => form.data(), (newData) => {
 const dropdownOpen = ref(false);
 const selectedIncomes = ref<number[]>([]);
 const clientLocale = ref(navigator.language || "en-US");
+const isExporting = ref(false);
 
 // Update the related functions
 const selectedCount = computed(() => selectedIncomes.value.length);
@@ -258,14 +261,45 @@ const deleteSelectedIncomes = () => {
     });
 };
 
-const exportIncomes = () => {
-    const incomesToExport =
-        selectedIncomes.value.length > 0
-            ? selectedIncomes.value
-            : props.incomes.data.map((income) => income.id);
+const exportIncomes = async (exportType: string) => {
+    isExporting.value = true;
+    try {
+        // Gunakan fetch untuk mendapatkan file
+        const response = await fetch(`/api/incomes/export`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                ids: JSON.stringify(selectedIncomes.value),
+                type: exportType,
+                filters: props.filters,
+                t: new Date().getTime().toString(),
+            })
+        });
 
-    console.log("Exporting incomes with ids: ", incomesToExport);
-    selectedIncomes.value = [];
+        if (!response.ok) {
+            throw new Error(`Failed to fetch: ${response.statusText}`);
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `income_export.${exportType}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        console.log(`Export successful as ${exportType}`);
+        selectedIncomes.value = [];
+        isExporting.value = false;
+    } catch (error) {
+        isExporting.value = false;
+        console.error("Failed to export incomes:", error);
+        toast.error("Failed to export incomes");
+    }
 };
 
 // CODE FOR PAGINATION
@@ -325,6 +359,7 @@ const secondaryTitlePage = computed(() => {
             return 'Keseluruhan';
     }
 });
+
 </script>
 
 <template>
@@ -338,6 +373,10 @@ const secondaryTitlePage = computed(() => {
             <h1 class="text-xl font-semibold tracking-tight">
                 Daftar Pendapatan
             </h1>
+        </template>
+
+        <template v-if="isExporting">
+            <Loading message="Mengekspor data..." />
         </template>
 
         <section class="bg-white p-3 rounded-lg mb-3 dark:bg-neutral-800">
@@ -652,15 +691,18 @@ const secondaryTitlePage = computed(() => {
                                     </DropdownMenuSubTrigger>
                                     <DropdownMenuPortal>
                                         <DropdownMenuSubContent>
-                                            <DropdownMenuItem class="cursor-pointer gap-1" @click="exportIncomes">
+                                            <DropdownMenuItem class="cursor-pointer gap-1"
+                                                @click="exportIncomes('pdf');">
                                                 <FileTextIcon :size="18" />
                                                 Export PDF
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem class="cursor-pointer gap-1" @click="exportIncomes">
+                                            <DropdownMenuItem class="cursor-pointer gap-1"
+                                                @click="exportIncomes('xlsx');">
                                                 <SheetIcon :size="18" /> Export
                                                 Excel
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem class="cursor-pointer gap-1" @click="exportIncomes">
+                                            <DropdownMenuItem class="cursor-pointer gap-1"
+                                                @click="exportIncomes('jpeg');">
                                                 <ImageIcon :size="18" />Export
                                                 JPG
                                             </DropdownMenuItem>

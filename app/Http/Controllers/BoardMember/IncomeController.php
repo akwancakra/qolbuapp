@@ -9,7 +9,6 @@ use App\Models\Income;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response as FacadesResponse;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -465,6 +464,7 @@ class IncomeController extends Controller
     public function export(Request $request)
     {
         $type = $request->input('type') ?? 'pdf';
+        $ids = $request->input('ids') ?? null;
 
         $filters = [
             'name' => $request->input('name') ?? 'default',
@@ -475,20 +475,19 @@ class IncomeController extends Controller
             'week' => $request->input('week'),
             'month' => $request->input('month'),
             'year' => $request->input('year'),
-            'count_per_page' => (int) ($request->input('count_per_page') ?? 10),
         ];
-        
+
         if ($filters['team_code'] === 'default') {
             $filters['team_code'] = null;
         }
 
         if ($filters['time'] === 'default') {
-            $filters['time'] = 
-            $filters['start_range'] =
-            $filters['end_range'] = 
-            $filters['week'] = 
-            $filters['month'] = 
-            $filters['year'] = null;
+            $filters['time'] =
+                $filters['start_range'] =
+                $filters['end_range'] =
+                $filters['week'] =
+                $filters['month'] =
+                $filters['year'] = null;
         }
 
         if ($filters['name'] === 'default') {
@@ -497,47 +496,45 @@ class IncomeController extends Controller
             $filters['name'] = substr($filters['name'], strpos($filters['name'], ' ') + 1);
         }
 
-        // CREATE BASE CODE FOR QUERY
-        $incomesQuery = Income::with('ambassador')
-            ->when($filters['name'], function ($query, $name) {
-                return $query->whereHas('ambassador', function ($query) use ($name) {
-                    $query->where('name', 'LIKE', '%' . $name . '%');
-                });
-            })
-            ->when($filters['team_code'], function ($query, $teamCode) {
-                return $query->whereHas('ambassador', function ($query) use ($teamCode) {
-                    $query->where('code', 'LIKE', $teamCode . '%');
-                });
-            });
+        if ($ids && count($ids) > 0) {
+            $incomes = Income::with('ambassador')->whereIn('id', $ids)->get();
+        } else {
+            // CREATE BASE CODE FOR QUERY
+            $incomes = Income::with('ambassador')
+                ->when($filters['name'], function ($query, $name) {
+                    return $query->whereHas('ambassador', function ($query) use ($name) {
+                        $query->where('name', 'LIKE', '%' . $name . '%');
+                    });
+                })
+                ->when($filters['team_code'], function ($query, $teamCode) {
+                    return $query->whereHas('ambassador', function ($query) use ($teamCode) {
+                        $query->where('code', 'LIKE', $teamCode . '%');
+                    });
+                })
+                ->when($filters['time'] === 'custom' && $filters['start_range'] && $filters['end_range'], function ($query) use ($filters) {
+                    return $query->whereBetween('transfer_date', [$filters['start_range'], $filters['end_range']]);
+                })
+                ->when($filters['time'] === 'weekly' && $filters['week'], function ($query) use ($filters) {
+                    $start = Carbon::parse($filters['week']);
+                    $end = $start->copy()->addDays(6);
+                    return $query->whereBetween('transfer_date', [$start, $end]);
+                })
+                ->when($filters['time'] === 'monthly' && $filters['month'] && $filters['year'], function ($query) use ($filters) {
+                    return $query->whereMonth('transfer_date', $filters['month'])->whereYear('transfer_date', $filters['year']);
+                })
+                ->when($filters['time'] === 'yearly' && $filters['year'], function ($query) use ($filters) {
+                    return $query->whereYear('transfer_date', $filters['year']);
+                })
+                ->orderByDesc('created_at')
+                ->get();
+        }
 
-        // GET INCOME BY FILTERING
-        $newIncomesQuery = (clone $incomesQuery)
-            ->when($filters['time'] === 'custom' && $filters['start_range'] && $filters['end_range'], function ($query) use ($filters) {
-                return $query->whereBetween('transfer_date', [$filters['start_range'], $filters['end_range']]);
-            })
-            ->when($filters['time'] === 'weekly' && $filters['week'], function ($query) use ($filters) {
-                $start = Carbon::parse($filters['week']);
-                $end = $start->copy()->addDays(6);
-                return $query->whereBetween('transfer_date', [$start, $end]);
-            })
-            ->when($filters['time'] === 'monthly' && $filters['month'] && $filters['year'], function ($query) use ($filters) {
-                return $query->whereMonth('transfer_date', $filters['month'])->whereYear('transfer_date', $filters['year']);
-            })
-            ->when($filters['time'] === 'yearly' && $filters['year'], function ($query) use ($filters) {
-                return $query->whereYear('transfer_date', $filters['year']);
-            });
-
-        // GET INCOME WITH PAGINATE
-        $incomes = (clone $newIncomesQuery)
-            ->orderByDesc('created_at')
-            ->paginate($filters['count_per_page']);
-        
         // SETTING UP TEMPLATE FOR REPORT
         $template = view('exports.incomes', ['incomes' => $incomes])->render();
 
         // EXPORT REPORT BASED ON TYPE
         $filename = Carbon::now();
-        
+
         if ($type === 'pdf') {
             $pdfData = Browsershot::html($template)
                 ->setPaper('a4')

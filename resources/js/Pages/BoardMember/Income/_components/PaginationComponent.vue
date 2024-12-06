@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Pagination, PaginationList } from "@/Components/ui/pagination";
-import { Button } from "@/Components/ui/button";
+import { Pagination, PaginationList } from "@/components/ui/pagination";
+import { Button } from "@/components/ui/button";
 import { computed, ref } from "vue";
 import { PaginationTemplate } from "@/types";
 
@@ -111,7 +111,7 @@ const goToPage = (page: number) => {
             <template v-for="(item, index) in processedLinks" :key="index">
                 <template v-if="item.type === 'page'">
                     <Button :variant="pagination.current_page === item.value ? 'default' : 'outline'"
-                        @click="goToPage(item.value)">
+                        @click="goToPage(item.value as number)">
                         {{ item.value }}
                     </Button>
                 </template>

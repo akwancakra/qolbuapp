@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { BarChart } from '@/Components/ui/chart-bar';
+import { BarChart } from '@/components/ui/chart-bar';
 import { formatNumber } from '@/lib/utils';
 
 

@@ -5,22 +5,24 @@ import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 import { Form, Field, ErrorMessage } from 'vee-validate';
 import { toTypedSchema } from '@vee-validate/zod';
 import { computed, onMounted, ref } from 'vue';
-import { Label } from '@/Components/ui/label';
-import { Input } from '@/Components/ui/input';
-import { Separator } from '@/Components/ui/separator';
-import { Button } from '@/Components/ui/button';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/Components/ui/alert-dialog';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { AlertCircle, Check, ChevronsUpDown, CornerUpLeftIcon, Loader2, Save } from 'lucide-vue-next';
-import { Popover, PopoverContent, PopoverTrigger } from "@/Components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/Components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { reactive } from 'vue';
 import { Inertia } from '@inertiajs/inertia';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
-import { Alert, AlertDescription, AlertTitle } from '@/Components/ui/alert';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { formatCurrency, getImageUrl } from '@/lib/utils';
 import { toast } from 'vue-sonner';
 import { useDateFormat } from '@vueuse/core';
 import { Ambassador, Income } from '@/types';
+import { NumberField, NumberFieldContent, NumberFieldDecrement, NumberFieldIncrement, NumberFieldInput } from '@/components/ui/number-field';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const props = defineProps<{
     income: Income,
@@ -252,12 +254,32 @@ onMounted(() => {
                             <Label for="amount">Jumlah donasi
                                 <span class="text-xs text-red-500">*wajib diisi</span>
                             </Label>
-                            <Field v-model="formValues.amount" name="amount" type="number" :rules="{ required: true }">
-                                <template v-slot="{ field }">
-                                    <Input v-bind="field" type="number" />
-                                </template>
-                            </Field>
-                            <ErrorMessage class="text-red-500 text-sm" name="amount" />
+                            <template v-if="formValues.amount">
+                                <Field v-model="formValues.amount" name="amount" type="number"
+                                    :rules="{ required: true }">
+                                    <template v-slot="{ field }">
+                                        <!-- <Input v-bind="field" type="number" /> -->
+                                        <NumberField v-bind="field" name="amount" id="balance" :min="0"
+                                            :default-value="formValues.amount" :format-options="{
+                                                style: 'currency',
+                                                currency: 'IDR',
+                                                currencyDisplay: 'code',
+                                                currencySign: 'accounting',
+                                                maximumFractionDigits: 0,
+                                            }" :step="10000">
+                                            <NumberFieldContent>
+                                                <NumberFieldDecrement />
+                                                <NumberFieldInput />
+                                                <NumberFieldIncrement />
+                                            </NumberFieldContent>
+                                        </NumberField>
+                                    </template>
+                                </Field>
+                                <ErrorMessage class="text-red-500 text-sm" name="amount" />
+                            </template>
+                            <template v-else>
+                                <Skeleton class="w-full h-10" />
+                            </template>
                         </div>
 
                         <div>

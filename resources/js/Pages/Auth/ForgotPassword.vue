@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { Button } from '@/Components/ui/button'
-import { Input } from '@/Components/ui/input'
-import { Form } from '@/Components/ui/form'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Form } from '@/components/ui/form'
 import { Loader2 } from 'lucide-vue-next'
 import { Label } from '@/components/ui/label'
 import { Head, Link, useForm } from '@inertiajs/vue3'
-import InputError from '@/Components/InputError.vue'
+import InputError from '@/components/InputError.vue'
 
 defineProps<{ status?: string }>();
 

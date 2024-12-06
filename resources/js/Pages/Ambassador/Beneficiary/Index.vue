@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3'
-import { Label } from '@/Components/ui/label';
-import { Input } from '@/Components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { PaginatedBeneficiaries } from '@/types';
-import { Button } from '@/Components/ui/button';
+import { Button } from '@/components/ui/button';
 import {
     Table,
     TableBody,
@@ -13,7 +13,7 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from '@/Components/ui/table';
+} from '@/components/ui/table';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -28,17 +28,17 @@ import {
     DropdownMenuSubContent,
     DropdownMenuRadioItem,
     DropdownMenuRadioGroup,
-} from '@/Components/ui/dropdown-menu';
+} from '@/components/ui/dropdown-menu';
 import { AlertCircle, BookUserIcon, DatabaseIcon, DownloadIcon, EllipsisIcon, FilePlusIcon, FileTextIcon, ImageIcon, PencilIcon, Search, SheetIcon, Trash2Icon } from 'lucide-vue-next';
-import { Checkbox } from '@/Components/ui/checkbox';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useDateFormat } from '@vueuse/core';
 // LOCAL CODE
 import DashboardLayout from '@/Layouts/DashboardLayout.vue'
-import { Alert, AlertDescription, AlertTitle } from '@/Components/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { toast } from 'vue-sonner';
 import PaginationComponent from '@/Pages/BoardMember/Income/_components/PaginationComponent.vue';
 import FilterBeneficiary from '@/Pages/BoardMember/Beneficiary/_components/FilterBeneficiary.vue';
-import Loading from '@/Components/Loading.vue';
+import Loading from '@/components/Loading.vue';
 
 const page = usePage();
 const props = defineProps<{

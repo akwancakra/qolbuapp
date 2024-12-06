@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import vue from '@vitejs/plugin-vue';
+import checker from 'vite-plugin-checker';
 
 export default defineConfig({
     plugins: [
@@ -16,5 +17,11 @@ export default defineConfig({
                 },
             },
         }),
+        // checker({
+        //     typescript: {
+        //         tsconfigPath: './tsconfig.json',
+        //     },
+        //     vueTsc: true,
+        // }),
     ],
 });

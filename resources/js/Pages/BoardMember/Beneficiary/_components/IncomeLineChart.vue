@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { LineChart } from '@/Components/ui/chart-line';
+import { LineChart } from '@/components/ui/chart-line';
 import { formatNumber } from '@/lib/utils';
 
 

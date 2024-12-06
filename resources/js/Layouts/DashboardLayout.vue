@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, watchEffect, onMounted } from 'vue';
 import { Toaster } from 'vue-sonner'
-import { Button } from '@/Components/ui/button';
+import { Button } from '@/components/ui/button';
 import { Link, usePage } from '@inertiajs/vue3';
 import {
     Sheet,
@@ -10,7 +10,7 @@ import {
     SheetHeader,
     SheetTitle,
     SheetTrigger,
-} from '@/Components/ui/sheet';
+} from '@/components/ui/sheet';
 import {
     ChevronRightIcon,
     HomeIcon,

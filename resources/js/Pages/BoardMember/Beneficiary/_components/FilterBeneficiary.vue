@@ -8,17 +8,17 @@ import {
     SheetHeader,
     SheetTitle,
     SheetTrigger,
-} from '@/Components/ui/sheet'
-import { Button } from '@/Components/ui/button'
-import { Input } from '@/Components/ui/input'
+} from '@/components/ui/sheet'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
     Select,
     SelectTrigger,
     SelectValue,
     SelectContent,
     SelectItem,
-} from '@/Components/ui/select'
-import { Separator } from '@/Components/ui/separator'
+} from '@/components/ui/select'
+import { Separator } from '@/components/ui/separator'
 import { toTypedSchema } from '@vee-validate/zod'
 import * as zod from 'zod';
 

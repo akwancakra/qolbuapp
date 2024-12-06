@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { defineProps, ref, computed, watch, Ref, onMounted } from "vue";
 import { Link, useForm, Head, usePage } from "@inertiajs/vue3";
-import { Button } from "@/Components/ui/button";
-import { Label } from "@/Components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import {
     Table,
     TableBody,
@@ -11,14 +11,14 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from "@/Components/ui/table";
+} from "@/components/ui/table";
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/Components/ui/select";
+} from "@/components/ui/select";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -33,7 +33,7 @@ import {
     DropdownMenuSubContent,
     DropdownMenuRadioGroup,
     DropdownMenuRadioItem,
-} from "@/Components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -44,7 +44,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
     AlertDialogTrigger,
-} from "@/Components/ui/alert-dialog";
+} from "@/components/ui/alert-dialog";
 import {
     EllipsisIcon,
     ChevronDownIcon,
@@ -60,29 +60,29 @@ import {
     ReceiptTextIcon,
     DatabaseIcon,
 } from "lucide-vue-next";
-import { Checkbox } from "@/Components/ui/checkbox";
+import { Checkbox } from "@/components/ui/checkbox";
 // LOCAL COMPONENTS
 import { Ambassador, PaginatedIncomes } from "@/types";
 import DashboardLayout from "@/Layouts/DashboardLayout.vue";
 import { useDateFormat } from "@vueuse/core";
 import { formatCurrency, formatNumber, getImageUrl } from "@/lib/utils";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/Components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
     CalendarDate,
 } from '@internationalized/date'
 import { DateRange } from "radix-vue";
-import { Popover, PopoverContent, PopoverTrigger } from "@/Components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/Components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { toast } from "vue-sonner";
-import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogScrollContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Separator } from "@/Components/ui/separator";
+import { Dialog, DialogClose, DialogFooter, DialogHeader, DialogScrollContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
 import RangeCalendarIncome from "@/Pages/BoardMember/Income/_components/RangeCalendarIncome.vue";
 import TopAmbassadorTable from "@/Pages/BoardMember/Beneficiary/_components/TopAmbassadorTable.vue";
 import TopDonorTable from "@/Pages/BoardMember/Beneficiary/_components/TopDonorTable.vue";
 import IncomeBarChart from "@/Pages/BoardMember/Beneficiary/_components/IncomeBarChart.vue";
 import IncomeLineChart from "@/Pages/BoardMember/Beneficiary/_components/IncomeLineChart.vue";
 import PaginationComponent from "@/Pages/BoardMember/Income/_components/PaginationComponent.vue";
-import Loading from "@/Components/Loading.vue";
+import Loading from "@/components/Loading.vue";
 
 // CREATIN INTERFACES FOR DATA
 interface TopAmbassador {

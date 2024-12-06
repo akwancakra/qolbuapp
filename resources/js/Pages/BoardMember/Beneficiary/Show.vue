@@ -2,18 +2,18 @@
 import { Head, Link } from '@inertiajs/vue3'
 import DashboardLayout from '@/Layouts/DashboardLayout.vue'
 import { CornerUpLeftIcon, EllipsisIcon, FileText, Loader2, PencilIcon, Trash2Icon } from 'lucide-vue-next';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/Components/ui/dropdown-menu';
-import { Separator } from '@/Components/ui/separator';
-import { Button } from '@/Components/ui/button';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/Components/ui/alert-dialog';
-import { AspectRatio } from '@/Components/ui/aspect-ratio';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Beneficiary } from '@/types';
 import { ref } from 'vue';
 import { useDateFormat } from '@vueuse/core';
 import { Inertia } from '@inertiajs/inertia';
 import { toast } from 'vue-sonner';
 import { getImageUrl, getUserDefaultImage } from '@/lib/utils';
-import Loading from '@/Components/Loading.vue';
+import Loading from '@/components/Loading.vue';
 
 const props = defineProps<{
     beneficiary: Beneficiary

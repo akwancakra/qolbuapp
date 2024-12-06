@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch, watchEffect } from 'vue';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3'
-import { Label } from '@/Components/ui/label';
-import { Input } from '@/Components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { PaginatedBeneficiaries } from '@/types';
-import { Button } from '@/Components/ui/button';
+import { Button } from '@/components/ui/button';
 import {
     Table,
     TableBody,
@@ -13,7 +13,7 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from '@/Components/ui/table';
+} from '@/components/ui/table';
 import {
     Select,
     SelectContent,
@@ -21,7 +21,7 @@ import {
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from '@/Components/ui/select';
+} from '@/components/ui/select';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -36,7 +36,7 @@ import {
     DropdownMenuSubContent,
     DropdownMenuRadioItem,
     DropdownMenuRadioGroup,
-} from '@/Components/ui/dropdown-menu';
+} from '@/components/ui/dropdown-menu';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -47,18 +47,33 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
     AlertDialogTrigger,
-} from '@/Components/ui/alert-dialog';
+} from '@/components/ui/alert-dialog';
 import { AlertCircle, BookUserIcon, DatabaseIcon, DownloadIcon, EllipsisIcon, FilePlusIcon, FileTextIcon, ImageIcon, PencilIcon, Search, SheetIcon, Trash2Icon } from 'lucide-vue-next';
-import { Checkbox } from '@/Components/ui/checkbox';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useDateFormat } from '@vueuse/core';
 // LOCAL CODE
 import DashboardLayout from '@/Layouts/DashboardLayout.vue'
 import PaginationComponent from '../Income/_components/PaginationComponent.vue';
 import FilterBeneficiary from './_components/FilterBeneficiary.vue';
-import { Alert, AlertDescription, AlertTitle } from '@/Components/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Inertia } from '@inertiajs/inertia';
 import { toast } from 'vue-sonner';
-import Loading from '@/Components/Loading.vue';
+import Loading from '@/components/Loading.vue';
+
+type FormType = {
+    name: string;
+    min_age: number;
+    max_age: number;
+    education: string;
+    school_grade: string;
+    shirt_size: string;
+    shoe_size: number;
+    gender: string;
+    status: string;
+    sort_by: string;
+    sort_direction: string;
+    count_per_page: string;
+};
 
 const page = usePage();
 const props = defineProps<{
@@ -84,7 +99,7 @@ const props = defineProps<{
 // ==============================================
 // ========== SEARCHING AND FIILTERING ==========
 // ==============================================
-const form = useForm({
+const form = useForm<FormType>({
     name: '',
     min_age: 0,
     max_age: 0,

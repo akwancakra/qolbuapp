@@ -2,14 +2,14 @@
 import { Head, Link } from '@inertiajs/vue3'
 import DashboardLayout from '@/Layouts/DashboardLayout.vue'
 import { CornerUpLeftIcon, FileText, Loader2 } from 'lucide-vue-next';
-import { Separator } from '@/Components/ui/separator';
-import { Button } from '@/Components/ui/button';
-import { AspectRatio } from '@/Components/ui/aspect-ratio';
+import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Beneficiary } from '@/types';
 import { ref } from 'vue';
 import { useDateFormat } from '@vueuse/core';
 import { getImageUrl, getUserDefaultImage } from '@/lib/utils';
-import Loading from '@/Components/Loading.vue';
+import Loading from '@/components/Loading.vue';
 import { toast } from 'vue-sonner';
 
 const props = defineProps<{

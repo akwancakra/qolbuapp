@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Button } from '@/Components/ui/button'
-import { Input } from '@/Components/ui/input'
-import { Checkbox } from '@/Components/ui/checkbox'
-import { Separator } from '@/Components/ui/separator'
-import { Form } from '@/Components/ui/form'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Separator } from '@/components/ui/separator'
+import { Form } from '@/components/ui/form'
 import { EyeIcon, EyeOffIcon, Loader2 } from 'lucide-vue-next'
 import { Label } from '@/components/ui/label'
 import { Head, Link, useForm } from '@inertiajs/vue3'
-import InputError from '@/Components/InputError.vue'
+import InputError from '@/components/InputError.vue'
 
 defineProps<{ canResetPassword?: boolean; status?: string; }>();
 

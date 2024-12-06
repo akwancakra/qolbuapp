@@ -84,7 +84,6 @@ import TopDonorTable from "../Beneficiary/_components/TopDonorTable.vue";
 import IncomeBarChart from "../Beneficiary/_components/IncomeBarChart.vue";
 import IncomeLineChart from "../Beneficiary/_components/IncomeLineChart.vue";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import axios from "axios";
 import Loading from "@/components/Loading.vue";
 
 // CREATIN INTERFACES FOR DATA

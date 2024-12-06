@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Beneficiary;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Spatie\Browsershot\Browsershot;
 use Illuminate\Support\Facades\Response as FacadesResponse;
 use Maatwebsite\Excel\Facades\Excel;
@@ -56,6 +57,8 @@ class BeneficiaryController extends Controller
             'count_per_page' => $filters['count_per_page'] ?? null,
         ];
 
+        Log::info($niks, $filters);
+
         if ($niks && is_string($niks)) {
             $niks = json_decode($niks, true);
         }
@@ -70,15 +73,15 @@ class BeneficiaryController extends Controller
         } else {
             // Build query based on filters
             $beneficiaries = Beneficiary::query()
-                ->search($request->name)
-                ->age($request->min_age, $request->max_age)
-                ->lastEducation($request->education)
-                ->schoolGrade($request->school_grade)
-                ->gender($request->gender)
-                ->status($request->status)
-                ->shirt($request->shirt_size)
-                ->shoe($request->shoe_size)
-                ->sortBy($request->input('sort_by', 'created_at'), $request->input('sort_direction', 'desc'))
+                ->search($filters['name'])
+                ->age($filters['min_age'], $filters['max_age'])
+                ->lastEducation($filters['education'])
+                ->schoolGrade($filters['school_grade'])
+                ->gender($filters['gender'])
+                ->status($filters['status'])
+                ->shirt($filters['shirt_size'])
+                ->shoe($filters['shoe_size'])
+                ->sortBy($filters['sort_by'], $filters['sort_direction'])
                 ->get();
 
             // If no beneficiaries found after applying filters

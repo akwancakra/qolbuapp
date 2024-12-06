@@ -83,6 +83,7 @@ import IncomeBarChart from "@/Pages/BoardMember/Beneficiary/_components/IncomeBa
 import IncomeLineChart from "@/Pages/BoardMember/Beneficiary/_components/IncomeLineChart.vue";
 import PaginationComponent from "@/Pages/BoardMember/Income/_components/PaginationComponent.vue";
 import Loading from "@/components/Loading.vue";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // CREATIN INTERFACES FOR DATA
 interface TopAmbassador {

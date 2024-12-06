@@ -73,7 +73,7 @@ const exportBeneficiary = async () => {
         <section class="bg-white p-3 rounded-lg mb-3 dark:bg-neutral-800">
             <div class="flex justify-between">
                 <p class="font-semibold text-2xl tracking-tight">{{ beneficiary.name }}</p>
-                <Buton variant="outline" @click="exportBeneficiary">
+                <Button variant="outline" @click="exportBeneficiary">
                     <template v-if="!isExporting">
                         <FileText class="w-4 h-4 mr-2" />
                         <span>Ekspor Data</span>
@@ -82,7 +82,7 @@ const exportBeneficiary = async () => {
                         <Loader2 class="w-4 h-4 mr-2 animate-spin" />
                         <span>Mengeksport...</span>
                     </template>
-                </Buton>
+                </Button>
             </div>
 
             <Separator class="my-3 dark:bg-neutral-600" />

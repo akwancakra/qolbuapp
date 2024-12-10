@@ -83,7 +83,7 @@ class BeneficiaryController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nik' => 'required|integer',
+            'nik' => 'required|integer|unique:beneficiaries,nik',
             'place_of_birth' => 'required|string',
             'date_of_birth' => 'required|date',
             'name' => 'required|string',
@@ -105,42 +105,46 @@ class BeneficiaryController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        if ($request->hasFile('photo')) {
-            $photoFileName = $this->storeFile($request->file('photo'), $request->name);
+        try {
+            if ($request->hasFile('photo')) {
+                $photoFileName = $this->storeFile($request->file('photo'), $request->name);
+            }
+
+            if ($request->hasFile('father_photo')) {
+                $fatherFileName = $this->storeFile($request->file('father_photo'), $request->father);
+            }
+
+            if ($request->hasFile('mother_photo')) {
+                $motherFileName = $this->storeFile($request->file('mother_photo'), $request->mother);
+            }
+
+            $beneficiary = Beneficiary::create([
+                'nik' => $request->nik,
+                'place_of_birth' => $request->place_of_birth,
+                'date_of_birth' => $request->date_of_birth,
+                'name' => $request->name,
+                'neighborhood_unit' => $request->neighborhood_unit,
+                'gender' => $request->gender,
+                'last_education' => $request->last_education,
+                'school_grade' => $request->school_grade,
+                'shirt_size' => $request->shirt_size,
+                'shoe_size' => $request->shoe_size,
+                'photo' => isset($photoFileName) ? $photoFileName : null,
+                'father' => $request->father,
+                'mother' => $request->mother,
+                'father_death_certificate_number' => $request->father_death_certificate_number,
+                'father_photo' => isset($fatherFileName) ? $fatherFileName : null,
+                'mother_death_certificate_number' => $request->mother_death_certificate_number,
+                'mother_photo' => isset($motherFileName) ? $motherFileName : null,
+                'phone_number' => $request->phone_number,
+                'status' => $request->status,
+                'description' => $request->description
+            ]);
+
+            return to_route('board_member.beneficiaries.show', $beneficiary->nik)->with('message', 'Berhasil menambahkan penerima manfaat');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()])->withInput();
         }
-
-        if ($request->hasFile('father_photo')) {
-            $fatherFileName = $this->storeFile($request->file('father_photo'), $request->father);
-        }
-
-        if ($request->hasFile('mother_photo')) {
-            $motherFileName = $this->storeFile($request->file('mother_photo'), $request->mother);
-        }
-
-        $beneficiary = Beneficiary::create([
-            'nik' => $request->nik,
-            'place_of_birth' => $request->place_of_birth,
-            'date_of_birth' => $request->date_of_birth,
-            'name' => $request->name,
-            'neighborhood_unit' => $request->neighborhood_unit,
-            'gender' => $request->gender,
-            'last_education' => $request->last_education,
-            'school_grade' => $request->school_grade,
-            'shirt_size' => $request->shirt_size,
-            'shoe_size' => $request->shoe_size,
-            'photo' => isset($photoFileName) ? $photoFileName : null,
-            'father' => $request->father,
-            'mother' => $request->mother,
-            'father_death_certificate_number' => $request->father_death_certificate_number,
-            'father_photo' => isset($fatherFileName) ? $fatherFileName : null,
-            'mother_death_certificate_number' => $request->mother_death_certificate_number,
-            'mother_photo' => isset($motherFileName) ? $motherFileName : null,
-            'phone_number' => $request->phone_number,
-            'status' => $request->status,
-            'description' => $request->description
-        ]);
-
-        return to_route('board_member.beneficiaries.show', $beneficiary->nik)->with('message', 'Berhasil menambahkan penerima manfaat');
     }
 
     /**

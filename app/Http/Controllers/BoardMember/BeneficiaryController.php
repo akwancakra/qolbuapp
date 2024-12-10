@@ -210,30 +210,37 @@ class BeneficiaryController extends Controller
 
         // dd($photoFileName, $motherPhotoFileName, $fatherPhotoFileName);
 
-        $beneficiary->update([
-            'nik' => $request->nik,
-            'place_of_birth' => $request->place_of_birth,
-            'date_of_birth' => $request->date_of_birth,
-            'name' => $request->name,
-            'neighborhood_unit' => $request->neighborhood_unit,
-            'gender' => $request->gender,
-            'last_education' => $request->last_education,
-            'school_grade' => $request->school_grade,
-            'shirt_size' => $request->shirt_size,
-            'shoe_size' => $request->shoe_size,
-            'photo' => isset($photoFileName) ? $photoFileName : $beneficiary->photo,
-            'father' => $request->father,
-            'mother' => $request->mother,
-            'father_death_certificate_number' => $request->father_death_certificate_number,
-            'father_photo' => isset($fatherPhotoFileName) ? $fatherPhotoFileName : $beneficiary->father_photo,
-            'mother_death_certificate_number' => $request->mother_death_certificate_number,
-            'mother_photo' => isset($motherPhotoFileName) ? $motherPhotoFileName : $beneficiary->mother_photo,
-            'phone_number' => $request->phone_number,
-            'status' => $request->status,
-            'description' => $request->description
-        ]);
+        try {
+            $beneficiary->update([
+                'nik' => $request->nik,
+                'place_of_birth' => $request->place_of_birth,
+                'date_of_birth' => $request->date_of_birth,
+                'name' => $request->name,
+                'neighborhood_unit' => $request->neighborhood_unit,
+                'gender' => $request->gender,
+                'last_education' => $request->last_education,
+                'school_grade' => $request->school_grade,
+                'shirt_size' => $request->shirt_size,
+                'shoe_size' => $request->shoe_size,
+                'photo' => isset($photoFileName) ? $photoFileName : $beneficiary->photo,
+                'father' => $request->father,
+                'mother' => $request->mother,
+                'father_death_certificate_number' => $request->father_death_certificate_number,
+                'father_photo' => isset($fatherPhotoFileName) ? $fatherPhotoFileName : $beneficiary->father_photo,
+                'mother_death_certificate_number' => $request->mother_death_certificate_number,
+                'mother_photo' => isset($motherPhotoFileName) ? $motherPhotoFileName : $beneficiary->mother_photo,
+                'phone_number' => $request->phone_number,
+                'status' => $request->status,
+                'description' => $request->description
+            ]);
 
-        return to_route('board_member.beneficiaries.show', $beneficiary->nik)->with('message', 'Berhasil mengubah penerima manfaat');
+            return to_route('board_member.beneficiaries.show', $beneficiary->nik)->with('message', 'Berhasil mengubah penerima manfaat');
+        } catch (\Illuminate\Database\QueryException $e) {
+            if ($e->errorInfo[1] == 1062) {
+                return back()->withErrors(['nik' => 'NIK sudah terdaftar'])->withInput();
+            }
+            return back()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()])->withInput();
+        }
     }
 
     /**

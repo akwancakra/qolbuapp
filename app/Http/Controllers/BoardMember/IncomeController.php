@@ -437,7 +437,7 @@ class IncomeController extends Controller
     public function destroyMultiple(Request $request): RedirectResponse
     {
         $ids = $request->input('ids');
-        $incomes = Income::whereIn('ids', $ids)->get();
+        $incomes = Income::whereIn('id', $ids)->get();
 
         foreach ($incomes as $income) {
             if ($income->proof) {

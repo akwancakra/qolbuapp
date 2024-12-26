@@ -132,9 +132,7 @@ onMounted(() => {
             <div class="flex justify-between items-center mb-3">
                 <div>
                     <p class="font-semibold text-2xl tracking-tight">QolbuApp - Akun</p>
-                    <p class="text-sm text-neutral-500">Lorem ipsum, dolor sit amet consectetur adipisicing elit.
-                        Eveniet
-                        veniam, vero omnis dolores temporibus sed?</p>
+                    <p class="text-sm text-neutral-500">Kelola akun dengan mudah dan cepat</p>
                 </div>
                 <DropdownMenu>
                     <DropdownMenuTrigger as-child>

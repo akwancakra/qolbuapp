@@ -24,11 +24,7 @@ const props = defineProps<{
         <section class="bg-white p-3 rounded-lg mb-3 dark:bg-neutral-800">
             <div class="mb-3">
                 <p class="font-semibold text-2xl tracking-tight">Selamat Datang, {{ props?.user?.name ?? 'Kamu' }}</p>
-                <p class="text-sm text-neutral-500 dark:text-neutral-400">Lorem ipsum, dolor sit amet consectetur
-                    adipisicing
-                    elit. Eveniet
-                    veniam,
-                    vero omnis dolores temporibus sed?</p>
+                <p class="text-sm text-neutral-500 dark:text-neutral-400">Kamu dapat langsung memilih 3 menu dibawah.</p>
             </div>
         </section>
 

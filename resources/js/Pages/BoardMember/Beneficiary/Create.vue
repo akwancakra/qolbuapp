@@ -159,7 +159,7 @@ const imagePreviewUrl = computed(() => {
         <section class="bg-white p-3 rounded-lg mb-3 dark:bg-neutral-800">
             <div class="mb-3">
                 <p class="font-semibold text-2xl tracking-tight">Data Penerima Manfaat</p>
-                <p class="text-sm text-neutral-500">Lorem ipsum, dolor sit amet consectetur adipisicing elit.</p>
+                <p class="text-sm text-neutral-500">Isikan data dengan baik dan benar.</p>
             </div>
 
             <div class="sm:flex gap-2">
